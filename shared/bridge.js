@@ -47,9 +47,9 @@
         try {
             if (op === 'punct') {
                 // повторяем логику punctBtn
-                if (typeof tgSplit === 'function' && typeof tgJoin === 'function' && typeof splitPunct === 'function') {
+                if (typeof punctSplit === 'function' && typeof tgJoin === 'function' && typeof splitPunct === 'function') {
                     // telegram
-                    var blocks = tgSplit(text);
+                    var blocks = punctSplit(text);
                     var out = [];
                     for (var b = 0; b < blocks.length; b++) {
                         var parts = splitPunct(blocks[b]);

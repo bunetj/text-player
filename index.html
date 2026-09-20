@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" type="image/png" href="favicon.png">
-<title>cheatread</title>
+<title>text simulators</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body {
@@ -20,51 +20,83 @@ body {
 }
 .hub { text-align: center; }
 h1 {
-    font-size: 26px;
+    font-size: 16px;
     font-weight: 600;
-    letter-spacing: -0.02em;
-    margin-bottom: 6px;
+    letter-spacing: 16px;
+    font-family: 'Courier New', Courier, monospace;
+    color: #6e6e6e;
+    text-align: center;
+    margin: 40px 0;
+    text-indent: 16px;
+}
+h1:first-child { margin-top: 0; }
+h1:last-child { margin-bottom: 0; }
+h2 {
+    margin: 40px auto 10px auto;
 }
 .desc {
-    color: #5e6f7e;
+    color: #6e6e6e;
     font-size: 13px;
-    margin-bottom: 22px;
+    margin: 12px 0 22px 0;
 }
 .row {
-    display: flex;
+    display: flexbox;
     justify-content: center;
     gap: 8px;
 }
 .row + .row { margin-top: 24px; }
 .pad {
-    display: inline-flex;
+    display: BLOCK;
     align-items: center;
     gap: 6px;
     text-decoration: none;
     color: #c8d1da;
-    background: rgb(22, 22, 22);
-    border-radius: 10px;
-    padding: 8px 14px;
+    padding: 4px 14px;
     font-size: 13px;
     font-weight: 500;
+    width: fit-content;
+    margin: 12px auto;
 }
-.pad:hover { background: #1e1e1e; color: #e8edf2; }
-.pad:active { background: #262626; }
-.pad-emoji { font-size: 14px; line-height: 1; }
+.pad:hover {
+    color: #e8edf2; }
+.pad-emoji { font-size: 14px; line-height: 1; margin: 0 20px; }
+hr {border:0;border-top:1px solid #444; margin: 24px 0;}
 </style>
 </head>
 <body>
 <div class="hub">
-<h1>cheatread</h1>
-<div class="desc">read books and articles like they're a chat or subtitles.</div>
+<h1>text simulators</h1>
+<div class="desc"></div>
+
+<h2>👓 CHEATREAD 👓</h2>
+
+<div class="desc">display LONG TEXTS LIKE they're CHATS or SUBTITLES</div>
+
 <div class="row">
-<a class="pad" href="formatter/index.html"><span class="pad-emoji">✏️</span>formatter</a>
+<a class="pad" href="CHEATREAD/formatter/index.html"><span class="pad-emoji">✏️</span>formatter<span class="pad-emoji">✏️</span></a>
 </div>
+<hr>
 <div class="row">
-<a class="pad" href="telegram/index.html"><span class="pad-emoji">💬</span>telegram</a>
-<a class="pad" href="subtitles/index.html"><span class="pad-emoji">🎬</span>subtitles</a><a class="pad" href="led/index.html"><span class="pad-emoji">💡</span>led scroller</a>
+<a class="pad" href="CHEATREAD/telegram/index.html"><span class="pad-emoji">💬</span>TELEGRAM READER<span class="pad-emoji">👓</span></a>
+<a class="pad" href="CHEATREAD/subtitles/index.html"><span class="pad-emoji">🎬</span>SUBTITLES READER<span class="pad-emoji">👓</span></a>
 </div>
+<hr>
+<div class="row">
+<a class="pad" href="CHEATREAD/led/index.html"><span class="pad-emoji">💡</span>led scroller<span class="pad-emoji">👓</span></a>
 </div>
 
+<H2>👥 SELF-PLAY 👥</H2>
+<DIV CLASS="desc">ROLE-PLAY OR CHAT TO YOURSELF.</DIV>
+
+<div class="row">
+
+<a class="pad" href="SELF-PLAY/TELEGRAM/index.html"><span class="pad-emoji">💬</span>TELEGRAM ROLEPLAY<span class="pad-emoji">👥</span></a>
+<a class="pad" href="SELF-PLAY/DISCORD/INDEX.HTML"><span class="pad-emoji">👾</span>DISCORD ROLEPLAY<span class="pad-emoji">👥👥👥</span></a>
+
+</div>
+
+<h1>text simulators</h1>
+
+</div>
 
 </body></html>

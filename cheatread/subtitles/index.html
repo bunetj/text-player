@@ -261,6 +261,40 @@
             color: #e8edf2;
         }
 
+        .bottom-bar {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            padding: 4px 8px;
+            height: 44px;
+        }
+        .bottom-bar .bar-play {
+            font-size: 22px;
+            color: #e8edf2;
+            background: #262626;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+        }
+        .bottom-bar .bar-play:hover { background: #333; }
+        .bottom-bar .bar-gear {
+            position: absolute;
+            right: 6px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 20px;
+            color: #8e9aa5;
+            background: transparent;
+            padding: 6px 10px;
+        }
+        .bottom-bar .bar-gear:hover { color: #e8edf2; }
+
         @media (max-width: 440px) {
             .app {
                 padding: 4px;
@@ -392,14 +426,26 @@
             <div class="sub-text" id="display"></div>
         </div>
 
-        <div class="toolbar" id="toolbar"></div>
-        <div class="textbox-area">
-            <textarea id="inputText" placeholder="Paste text with blank lines between subtitles"></textarea>
+        <div class="bottom-bar">
+            <button class="menu-btn bar-play" id="playBtn" title="Play">▶</button>
+            <button class="menu-btn bar-gear" id="gearBtn" title="Menu">⚙</button>
         </div>
-
     </div>
 
-                <script src="../shared/ui.js"></script>
+    <div class="modal" id="settingsModal">
+        <div class="modal-box settings">
+            <h3>Menu</h3>
+            <div class="toolbar" id="toolbar-top"></div>
+            <div class="textbox-area" style="margin-top:8px;">
+                <textarea id="inputText" placeholder="Paste text with blank lines between subtitles"></textarea>
+            </div>
+            <div class="toolbar" id="toolbar-bottom"></div>
+        </div>
+    </div>
+
+                <link rel="stylesheet" href="../shared/modal.css">
+<script src="../shared/modal.js"></script>
+<script src="../shared/ui.js"></script>
 <script>
 /* ===== INLINED text.js ===== */
 // shared/text.js — shared text helpers (extracted verbatim from apps)
@@ -825,8 +871,25 @@ function applyLow(text, settings) {
                 // CHUNKING
                 // BUILD MENU
         function buildMenu() {
-            var toolbar = document.getElementById('toolbar');
-            toolbar.innerHTML =
+            var top = document.getElementById('toolbar-top');
+            var bottom = document.getElementById('toolbar-bottom');
+
+            top.innerHTML =
+                '<div class="menu-section">' +
+                '   <span class="menu-label">FONT</span>' +
+                '   <button class="menu-btn" id="fontSmall">A−</button>' +
+                '   <span class="menu-label-display" id="sizeLabel">20px</span>' +
+                '   <button class="menu-btn" id="fontBig">A+</button>' +
+                '</div>' +
+                '<div class="menu-section">' +
+                '   <span class="menu-label">SPEED</span>' +
+                '   <button class="menu-btn" id="slowerBtn">🐢−</button>' +
+                '   <input type="range" class="menu-range" id="speedSlider" min="50" max="700" step="25" value="250">' +
+                '   <button class="menu-btn" id="fasterBtn">🐇+</button>' +
+                '   <span class="menu-label-display" id="speedValue">250 WPM</span>' +
+                '</div>';
+
+            bottom.innerHTML =
                 '<div class="menu-section">' +
                 '   <span class="menu-label">PREP</span>' +
                 '   <button class="menu-btn" id="lowBtn">low</button>' +
@@ -837,20 +900,6 @@ function applyLow(text, settings) {
                 '   <span class="menu-label">CHUNK words:</span>' +
                 '   <input type="number" id="wordCountInput" value="3" min="1" style="width:48px;padding:2px 12px 2px 8px;background:#333333;border:none;border-radius:4px;color:#e8edf2;font-size:12px;text-align:center;">' +
                 '   <button class="menu-btn" id="applyBtn">apply</button>' +
-                '</div>' +
-                '<div class="menu-section">' +
-                '   <span class="menu-label">FONT</span>' +
-                '   <button class="menu-btn" id="fontSmall">A−</button>' +
-                '   <span class="menu-label-display" id="sizeLabel">20px</span>' +
-                '   <button class="menu-btn" id="fontBig">A+</button>' +
-                '</div>' +
-                '<div class="menu-section">' +
-                '   <span class="menu-label">PLAY</span>' +
-                '   <button class="menu-btn" id="playBtn">▶</button>' +
-                '   <button class="menu-btn" id="slowerBtn">🐢−</button>' +
-                '   <input type="range" class="menu-range" id="speedSlider" min="50" max="700" step="25" value="250">' +
-                '   <button class="menu-btn" id="fasterBtn">🐇+</button>' +
-                '   <span class="menu-label-display" id="speedValue" >250 WPM</span>' +
                 '</div>';
         }
 
@@ -966,6 +1015,27 @@ function applyLow(text, settings) {
                 if (autoPlay.isPlaying()) autoPlay.stopPlay();
                 else autoPlay.startPlay();
             };
+
+            var gear = document.getElementById('gearBtn');
+            if (gear) {
+                gear.onclick = function () {
+                    if (typeof openModal === 'function') openModal('settingsModal');
+                    else {
+                        var m = document.getElementById('settingsModal');
+                        if (m) m.classList.add('active');
+                    }
+                };
+            }
+
+            var settingsModal = document.getElementById('settingsModal');
+            if (settingsModal) {
+                settingsModal.onclick = function (e) {
+                    if (e.target === settingsModal) {
+                        if (typeof closeModal === 'function') closeModal('settingsModal');
+                        else settingsModal.classList.remove('active');
+                    }
+                };
+            }
         }
 
         // KEYBOARD SHORTCUTS
@@ -1024,11 +1094,7 @@ function applyLow(text, settings) {
         };
 
         
-    // Reorganize menu - move prep/chunk to bottom
-        
-    // Call reorganization after menu is built
     buildMenu();
-    reorganizeMenu();
         initMenu();
         var __restored = loadState();
         if (__restored) {

@@ -1,0 +1,100 @@
+/* shared/style.css — demo look, blue own. */
+:root {
+  --message-in-background-color:  #212121;
+  --message-out-background-color: #2b5278;
+  --primary-text-color: #ffffff;
+  --bubble-border-radius-big:    12px;
+  --bubble-border-radius-medium: 12px;
+  --bubble-margin:               .125rem;
+  --bubble-margin-big:           .375rem;
+  --message-padding-horizontal:  .5rem;
+  --message-padding-top:         .375rem;
+  --message-padding-bottom:      .375rem;
+  --messages-text-size:          16px;
+  --messages-line-height:        21px;
+}
+
+.msg {
+  --message-background-color: var(--other-color, var(--message-in-background-color));
+  --border-start-start-radius: var(--bubble-border-radius-medium);
+  --border-start-end-radius:   var(--bubble-border-radius-big);
+  --border-end-end-radius:     var(--bubble-border-radius-big);
+  --border-end-start-radius:   var(--bubble-border-radius-medium);
+
+  position: relative;
+  z-index: 1;
+  margin: 0 0 var(--bubble-margin) 0;
+  user-select: none;
+  display: flex;
+  flex-wrap: wrap;
+  box-sizing: border-box;
+  max-width: 85%;
+  align-self: flex-start;
+}
+
+.msg.is-in  { align-self: flex-start; }
+.msg.is-out {
+  align-self: flex-end;
+  flex-direction: row-reverse;
+  --message-background-color: var(--own-color, var(--message-out-background-color));
+  --border-start-start-radius: var(--bubble-border-radius-big);
+  --border-start-end-radius:   var(--bubble-border-radius-medium);
+  --border-end-end-radius:     var(--bubble-border-radius-medium);
+  --border-end-start-radius:   var(--bubble-border-radius-big);
+}
+
+.msg.is-group-first.is-in  { --border-start-start-radius: var(--bubble-border-radius-big); }
+.msg.is-group-first.is-out { --border-start-end-radius:   var(--bubble-border-radius-big); }
+.msg.is-group-last         { margin-bottom: var(--bubble-margin-big); }
+
+.msg > .bubble-content-wrapper {
+  display: flex;
+  flex-direction: column;
+  max-width: 100%;
+}
+.msg > .bubble-content-wrapper > .bubble-content {
+  max-width: 100%;
+  border-start-start-radius: var(--border-start-start-radius);
+  border-start-end-radius:   var(--border-start-end-radius);
+  border-end-start-radius:   var(--border-end-start-radius);
+  border-end-end-radius:     var(--border-end-end-radius);
+  box-shadow: 0 1px 2px 0 rgba(16, 35, 47, .15);
+  position: relative;
+  z-index: 2;
+  background-color: var(--message-background-color);
+}
+
+.msg .message {
+  font-size: var(--messages-text-size);
+  margin: 0.375em 0.5em 0.375em;
+  max-width: 100%;
+  color: var(--primary-text-color);
+  line-height: var(--messages-line-height);
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+
+.msg a { color: #cfe3ff; text-decoration: none; }
+.msg a:hover { text-decoration: underline; }
+.msg.is-in a { color: #8ab4f8; }
+.msg .message p { margin: 0; display: inline; }
+
+.msg.reacted::after {
+  content: "\2764\FE0F";
+  position: absolute;
+  bottom: -8px;
+  right: 4px;
+  font-size: 11px;
+  line-height: 1;
+  background: var(--react-color, #8ab4f8);
+  border-radius: 10px;
+  padding: 2px 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .6);
+  pointer-events: none;
+}
+.msg.is-in.reacted::after { right: auto; left: 4px; }
+
+
+/* cut corner on every bubble */
+.msg.is-in  { --border-end-start-radius: 0 !important; }
+.msg.is-out { --border-end-end-radius:   0 !important; }

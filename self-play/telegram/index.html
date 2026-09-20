@@ -1,0 +1,1125 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="favicon.png">
+    <title>TG RP chat</title>
+    
+    <style>
+        /* SELF-PLAY overrides: */
+        .avatar { border: none; padding: 0; color: #e8edf2; }
+        .chat-info { user-select: none; }
+    </style>
+    <link rel="stylesheet" href="../../shared/telegram.css">
+    <link rel="stylesheet" href="../../shared/modal.css">
+    <link rel="stylesheet" href="../../shared/style.css">
+</head>
+
+<body>
+
+    <div class="app">
+        <div class="chat-wrapper">
+            <div class="chat">
+                <div class="header">
+                    <div class="avatar" id="avatar">👤</div>
+                    <div class="chat-name-wrap">
+                        <div class="chat-name" id="chatName">Alex</div>
+                        <div class="chat-status" id="chatStatus">online</div>
+                    </div>
+                    <button class="dots-btn" id="dotsBtn" title="Menu">⋮</button>
+                </div>
+                <div class="msgs" id="msgs"></div>
+                <div class="input-area">
+                    <textarea id="ownInput" placeholder="Message as Alex…" rows="1"></textarea>
+                    
+                </div>
+            </div>
+        </div>
+
+        
+    </div>
+
+    <div class="modal" id="settingsModal">
+        <div class="modal-box settings">
+            <h3>Menu</h3>
+            <div class="toolbar" id="toolbar"></div>
+            <div class="chat-footer">
+                <span class="chat-info">Alt+M / avatar click to switch; send empty to receive ℹ️</span>
+            </div>
+            <div class="btn-row">
+                <button class="btn-cancel" id="settingsClose">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= Names modal ================= -->
+    <div class="modal" id="modal">
+        <div class="modal-box">
+            <h3>Names</h3>
+            <div class="name-grid">
+
+                <div class="name-col">
+                    <span class="name-col-title" id="mOwnTitle">Alex</span>
+                    <label>Emoji</label>
+                    <input type="text" id="mOwnEmoji" value="🙂" maxlength="2">
+                    <label>Name</label>
+                    <input type="text" id="mOwnName" value="Alex">
+                    <label>Avatar color</label>
+                    <div class="color-picker-row">
+                        <div class="color-preview" id="mOwnAvatarPreview"></div>
+                        <input type="color" id="mOwnAvatar" value="#2b5278">
+                    </div>
+                    <label>My messages</label>
+                    <div class="color-picker-row">
+                        <div class="color-preview" id="mOwnMyPreview"></div>
+                        <input type="color" id="mOwnMy" value="#2b5278">
+                    </div>
+                    <label>Their messages</label>
+                    <div class="color-picker-row">
+                        <div class="color-preview" id="mOwnTheirPreview"></div>
+                        <input type="color" id="mOwnTheir" value="#2b3b4a">
+                    </div>
+                </div>
+
+                <div class="name-col">
+                    <span class="name-col-title" id="mOtherTitle">Liza</span>
+                    <label>Emoji</label>
+                    <input type="text" id="mOtherEmoji" value="👤" maxlength="2">
+                    <label>Name</label>
+                    <input type="text" id="mOtherName" value="Liza">
+                    <label>Avatar color</label>
+                    <div class="color-picker-row">
+                        <div class="color-preview" id="mOtherAvatarPreview"></div>
+                        <input type="color" id="mOtherAvatar" value="#3a5a2b">
+                    </div>
+                    <label>My messages</label>
+                    <div class="color-picker-row">
+                        <div class="color-preview" id="mOtherMyPreview"></div>
+                        <input type="color" id="mOtherMy" value="#2b5278">
+                    </div>
+                    <label>Their messages</label>
+                    <div class="color-picker-row">
+                        <div class="color-preview" id="mOtherTheirPreview"></div>
+                        <input type="color" id="mOtherTheir" value="#2b3b4a">
+                    </div>
+                </div>
+
+            </div>
+            
+            <div class="reset-colors-row">
+                <a href="#" id="resetColorsLink">Reset message colors to default</a>
+            </div>
+
+            <div class="btn-row">
+                <button class="btn-cancel" id="modalCancel">Cancel</button>
+                <button class="btn-save" id="modalSave">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= Clip modal ================= -->
+    <div class="modal" id="clipModal">
+        <div class="modal-box">
+            <h3>Copy chat</h3>
+            <label class="clip-check"><input type="checkbox" id="clipAll" checked> All messages</label>
+            <label class="clip-check"><input type="checkbox" id="clipOwn"> Only me</label>
+            <label class="clip-check"><input type="checkbox" id="clipRecv"> Only they</label>
+            <label class="clip-check"><input type="checkbox" id="clipReacted"> Reacted ❤️</label>
+            <div class="btn-row">
+                <button class="btn-cancel" id="clipCancel">Cancel</button>
+                <button class="btn-save" id="clipCopy">Copy</button>
+            </div>
+        </div>
+    </div>
+
+<script src="../../shared/bubble.js"></script>
+<script src="../../shared/markdown.js"></script>
+<script src="../../shared/clipboard.js"></script>
+<script src="../../shared/modal.js"></script>
+<script src="../../shared/chat-core.js"></script>
+<script>
+        // ============================================================
+        // RP CHAT — two people, one perspective at a time
+        // ============================================================
+
+        var STORE_KEY = 'chat_rp_v1';
+
+        // ---- state ----
+        // Each person has a theme:
+        //   emoji, name, avatarColor (header bg),
+        //   myMsgColor (their own bubbles), theirMsgColor (the other's bubbles)
+        var state = {
+            people: {
+                own: {
+                    name: 'Alex',
+                    emoji: '🙂',
+                    avatarColor: '#2b5278',
+                    myMsgColor: '#2b5278',
+                    theirMsgColor: '#2b3b4a',
+                },
+                other: {
+                    name: 'Liza',
+                    emoji: '👤',
+                    avatarColor: '#3a5a2b',
+                    myMsgColor: '#2b5278',
+                    theirMsgColor: '#2b3b4a',
+                },
+            },
+            currentPerspective: 'own',   // 'own' | 'other'
+            fontSize: 14,
+            userScrolledUp: false,
+            isProgrammaticScroll: false,
+            bot: {
+                active: false,
+                answers: [
+                    'ok','yes','idk','what','stop','real','lol','fuck','shit','wtf','mhm','fine',
+                    'ок','да','нз','что','хватит','реально','лол','блядь','сука','чзх','пздц','мгм','ладно'
+                ],
+            },
+        };
+
+        // ---- DOM refs ----
+        var msgs         = document.getElementById('msgs');
+        var ownInput     = document.getElementById('ownInput');
+        var chatName     = document.getElementById('chatName');
+        var avatar       = document.getElementById('avatar');
+
+        var modal             = document.getElementById('modal');
+        var modalCancel       = document.getElementById('modalCancel');
+        var modalSave         = document.getElementById('modalSave');
+
+        // per-person fields in modal
+        var mOwnName          = document.getElementById('mOwnName');
+        var mOwnEmoji         = document.getElementById('mOwnEmoji');
+        var mOwnAvatar        = document.getElementById('mOwnAvatar');
+        var mOwnAvatarPreview = document.getElementById('mOwnAvatarPreview');
+        var mOwnMy            = document.getElementById('mOwnMy');
+        var mOwnMyPreview     = document.getElementById('mOwnMyPreview');
+        var mOwnTheir         = document.getElementById('mOwnTheir');
+        var mOwnTheirPreview  = document.getElementById('mOwnTheirPreview');
+
+        var mOtherName          = document.getElementById('mOtherName');
+        var mOtherEmoji         = document.getElementById('mOtherEmoji');
+        var mOtherAvatar        = document.getElementById('mOtherAvatar');
+        var mOtherAvatarPreview = document.getElementById('mOtherAvatarPreview');
+        var mOtherMy            = document.getElementById('mOtherMy');
+        var mOtherMyPreview     = document.getElementById('mOtherMyPreview');
+        var mOtherTheir         = document.getElementById('mOtherTheir');
+        var mOtherTheirPreview  = document.getElementById('mOtherTheirPreview');
+
+        var clipModal  = document.getElementById('clipModal');
+        var clipAll    = document.getElementById('clipAll');
+        var clipOwn    = document.getElementById('clipOwn');
+        var clipRecv   = document.getElementById('clipRecv');
+        var clipReacted= document.getElementById('clipReacted');
+        var clipCopy   = document.getElementById('clipCopy');
+        var clipCancel = document.getElementById('clipCancel');
+
+
+        // ============================================================
+        // FONT
+        // ============================================================
+        function applyFontSize() {
+            if (msgs) msgs.style.setProperty('--messages-text-size', state.fontSize + 'px');
+            var lbl = document.getElementById('sizeLabel');
+            if (lbl) lbl.textContent = state.fontSize + 'px';
+        }
+        function fontIncrease() { state.fontSize = Math.min(state.fontSize + 2, 40); applyFontSize(); saveState(); }
+        function fontDecrease() { state.fontSize = Math.max(state.fontSize - 2, 10); applyFontSize(); saveState(); }
+
+
+        // ============================================================
+        // RENDER — re-derive classes + colors for every .msg from the
+        // current perspective. Each msg carries data-author ('own'|'other').
+        // ============================================================
+        function refreshAllMsgStyles() {
+            var p = state.currentPerspective;
+            var me = state.people[p];
+            var them = state.people[p === 'own' ? 'other' : 'own'];
+
+            // CSS vars used by .msg.own / .msg.recv
+            msgs.style.setProperty('--own-color',   me.myMsgColor);
+            msgs.style.setProperty('--other-color', me.theirMsgColor); // how *I* see *them*
+            msgs.style.setProperty('--react-color', me.myMsgColor);
+
+            // walk messages, re-assign own/recv based on author vs perspective
+            var nodes = msgs.querySelectorAll('.msg');
+            for (var i = 0; i < nodes.length; i++) {
+                var n = nodes[i];
+                var author = n.getAttribute('data-author') || 'own';
+                var isMine = (author === p);
+                n.classList.toggle('own',  isMine);
+                n.classList.toggle('recv', !isMine);
+            }
+            refreshBubbles();
+        }
+
+                // Pick black or white text for an avatar based on the bg luminance.
+        function avatarTextColor(hex) {
+            if (!hex) return '#e8edf2';
+            var h = hex.replace('#', '');
+            if (h.length === 3) h = h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
+            var r = parseInt(h.substr(0,2), 16) / 255;
+            var g = parseInt(h.substr(2,2), 16) / 255;
+            var b = parseInt(h.substr(4,2), 16) / 255;
+            // sRGB relative luminance
+            function lin(c){ return c <= 0.03928 ? c/12.92 : Math.pow((c+0.055)/1.055, 2.4); }
+            var L = 0.2126*lin(r) + 0.7152*lin(g) + 0.0722*lin(b);
+            return L > 0.5 ? '#000000' : '#ffffff';
+        }
+
+        function updateModeUI() {
+            var p = state.currentPerspective;
+            var me = state.people[p];
+            var them = state.people[p === 'own' ? 'other' : 'own'];
+            // Header shows the person you're TALKING TO.
+            chatName.textContent = them.name;
+            avatar.textContent = them.emoji || '👤';
+            avatar.style.background = them.avatarColor;
+            avatar.style.color = avatarTextColor(them.avatarColor);
+            // Textbox tells you who you're WRITING AS.
+            ownInput.placeholder = 'Message as ' + me.name + '…';
+            refreshAllMsgStyles();
+        }
+
+        function togglePerspective() {
+            state.currentPerspective = (state.currentPerspective === 'own') ? 'other' : 'own';
+            updateModeUI();
+            saveState();
+            if (autoPlay.active) autoPlay.onPerspectiveChange();
+        }
+
+
+        // ============================================================
+        // MESSAGES
+        // ============================================================
+        var _lastSendAt = 0;
+
+        var _msgApp = { state: state, msgs: msgs, applyFontSize: applyFontSize,
+                        saveState: saveState, refreshBubbles: refreshBubbles,
+                        autoPlay: null };
+        function addMsg(text, author, delayOverride) {
+            _msgApp._lastSendAt = _lastSendAt;
+            chatAddMsg(_msgApp, text, author,
+                       { delay: (typeof delayOverride === 'number') ? delayOverride : undefined });
+            _lastSendAt = _msgApp._lastSendAt;
+        }
+
+        // ---- bubble side tagging ----
+        function refreshBubbles() {
+            bubbleMarkSides(msgs, function (n) {
+                return n.getAttribute('data-author') === state.currentPerspective ? 'a' : 'b';
+            });
+        }
+
+        function sendBotMessage() {
+            var answers = state.bot.answers || [];
+            if (!answers.length) return;
+            var pick = answers[Math.floor(Math.random() * answers.length)];
+            // Send as the OTHER person relative to current perspective.
+            var themAuthor = (state.currentPerspective === 'own') ? 'other' : 'own';
+            addMsg(pick, themAuthor);
+            state.userScrolledUp = false;
+            requestAnimationFrame(function () {
+                state.isProgrammaticScroll = true;
+                msgs.scrollTop = msgs.scrollHeight;
+            });
+        }
+
+        function handleSend() {
+            var raw = ownInput.value;
+
+            if (!raw.trim()) {
+                // Empty input.
+                // BOT mode: send a random answer as the OTHER person.
+                if (state.bot.active && !autoPlay.active) {
+                    sendBotMessage();
+                    return;
+                }
+                // Autoplay with a running countdown: flush the pending.
+                if (autoPlay.active) autoPlay.flush();
+                return;
+            }
+
+            if (autoPlay.active) {
+                addMsgSilent(raw, state.currentPerspective, 0);
+                autoPlay.kick();
+            } else {
+                addMsg(raw, state.currentPerspective);
+            }
+
+            state.userScrolledUp = false;
+            requestAnimationFrame(function () {
+                state.isProgrammaticScroll = true;
+                msgs.scrollTop = msgs.scrollHeight;
+            });
+            ownInput.value = '';
+            ownInput.focus();
+        }
+
+
+        // ============================================================
+        // TOOLBAR
+        // ============================================================
+        function buildMenu() {
+            var toolbar = document.getElementById('toolbar');
+            toolbar.innerHTML =
+                '<div class="menu-section">' +
+                '   <span class="menu-label">FONT</span>' +
+                '   <button class="menu-btn" id="fontSmall">A−</button>' +
+                '   <span class="menu-label-display" id="sizeLabel">14px</span>' +
+                '   <button class="menu-btn" id="fontBig">A+</button>' +
+                '</div>' +
+                '<div class="menu-section">' +
+                '   <span class="menu-label">AUTO</span>' +
+                '   <button class="menu-btn" id="playBtn" title="Auto play">▶</button>' +
+                '</div>' +
+                '<div class="menu-section">' +
+                '   <span class="menu-label">BOT</span>' +
+                '   <button class="menu-btn" id="botToggle" title="Bot mode">🤖</button>' +
+                '   <button class="menu-btn" id="botSettings" title="Bot answers">…</button>' +
+                '</div>' +
+                '<div class="menu-section">' +
+                '   <span class="menu-label">CHAT</span>' +
+                '   <button class="menu-btn" id="namesBtn"  title="Names">👤</button>' +
+                '   <button class="menu-btn" id="exportBtn" title="Copy chat">📋</button>' +
+                '   <button class="menu-btn" id="clearBtn"  title="Clear chat">🗑</button>' +
+                '</div>';
+        }
+
+        function initMenu() {
+            document.getElementById('fontSmall').onclick = fontDecrease;
+            document.getElementById('fontBig').onclick = fontIncrease;
+
+            document.getElementById('namesBtn').onclick = function () {
+                fillModal();
+                openModal('modal');
+                setTimeout(function () { mOwnName.focus(); }, 50);
+            };
+
+            document.getElementById('exportBtn').onclick = function () {
+                openModal('clipModal');
+            };
+
+            document.getElementById('clearBtn').onclick = function () {
+                if (!confirm('Clear chat?')) return;
+                msgs.innerHTML = '';
+                _lastSendAt = 0;
+                if (autoPlay) {
+                    autoPlay.savedSnapshot = null;
+                    autoPlay.playbackDom = [];
+                }
+                saveState();
+            };
+
+            document.getElementById('playBtn').onclick = function () {
+                if (autoPlay.active) {
+                    autoPlay.stop();
+                } else {
+                    // Starting autoplay turns BOT off.
+                    if (state.bot.active) {
+                        state.bot.active = false;
+                        updateBotUI();
+                    }
+                    autoPlay.start();
+                }
+            };
+
+            document.getElementById('botToggle').onclick = function () {
+                if (state.bot.active) {
+                    state.bot.active = false;
+                } else {
+                    // Turning BOT on turns AUTO off.
+                    if (autoPlay.active) autoPlay.stop();
+                    state.bot.active = true;
+                }
+                updateBotUI();
+                saveState();
+            };
+
+            document.getElementById('botSettings').onclick = function () {
+                botTextarea.value = (state.bot.answers || []).join('\n');
+                openModal('botModal');
+                setTimeout(function () { botTextarea.focus(); }, 50);
+            };
+
+        }
+
+
+        // ============================================================
+        // NAMES MODAL
+        // ============================================================
+        function fillModal() {
+            var o = state.people.own;
+            var t = state.people.other;
+
+            mOwnName.value = o.name;
+            mOwnEmoji.value = o.emoji;
+            mOwnAvatar.value = o.avatarColor;
+            mOwnAvatarPreview.style.background = o.avatarColor;
+            mOwnMy.value = o.myMsgColor;
+            mOwnMyPreview.style.background = o.myMsgColor;
+            mOwnTheir.value = o.theirMsgColor;
+            mOwnTheirPreview.style.background = o.theirMsgColor;
+
+            mOtherName.value = t.name;
+            mOtherEmoji.value = t.emoji;
+            mOtherAvatar.value = t.avatarColor;
+            mOtherAvatarPreview.style.background = t.avatarColor;
+            mOtherMy.value = t.myMsgColor;
+            mOtherMyPreview.style.background = t.myMsgColor;
+            mOtherTheir.value = t.theirMsgColor;
+            mOtherTheirPreview.style.background = t.theirMsgColor;
+        }
+
+        function wireColorPair(hiddenEl, previewEl) {
+            previewEl.onclick = function () { hiddenEl.click(); };
+            hiddenEl.oninput = function () { previewEl.style.background = hiddenEl.value; };
+        }
+
+        wireColorPair(mOwnAvatar, mOwnAvatarPreview);
+        wireColorPair(mOwnMy,     mOwnMyPreview);
+        wireColorPair(mOwnTheir,  mOwnTheirPreview);
+        wireColorPair(mOtherAvatar, mOtherAvatarPreview);
+        wireColorPair(mOtherMy,     mOtherMyPreview);
+        wireColorPair(mOtherTheir,  mOtherTheirPreview);
+
+        var resetLink = document.getElementById('resetColorsLink');
+        if (resetLink) {
+            resetLink.onclick = function (e) {
+                e.preventDefault();
+                resetMsgColors();
+            };
+        }
+
+                function resetMsgColors() {
+            state.people.own.myMsgColor = '#2b5278';
+            state.people.own.theirMsgColor = '#2b3b4a';
+            state.people.other.myMsgColor = '#2b5278';
+            state.people.other.theirMsgColor = '#2b3b4a';
+            fillModal();      // repaint pickers + previews
+            updateModeUI();   // repaint bubbles
+            saveState();      // persist
+        }
+
+        modalCancel.onclick = function () { closeModal('modal'); };
+        modalSave.onclick = function () {
+            var o = state.people.own;
+            var t = state.people.other;
+
+            o.name         = mOwnName.value.trim()  || 'Alex';
+            o.emoji        = mOwnEmoji.value.trim() || '🙂';
+            o.avatarColor  = mOwnAvatar.value       || o.avatarColor;
+            o.myMsgColor   = mOwnMy.value           || o.myMsgColor;
+            o.theirMsgColor= mOwnTheir.value        || o.theirMsgColor;
+
+            t.name         = mOtherName.value.trim()  || 'Liza';
+            t.emoji        = mOtherEmoji.value.trim() || '👤';
+            t.avatarColor  = mOtherAvatar.value       || t.avatarColor;
+            t.myMsgColor   = mOtherMy.value           || t.myMsgColor;
+            t.theirMsgColor= mOtherTheir.value        || t.theirMsgColor;
+
+            updateModeUI();
+            saveState();
+            modal.classList.remove('active');
+        };
+        modal.onclick = function (e) { if (e.target === modal) closeModal('modal'); };
+
+
+        // ============================================================
+        // CLIPBOARD / EXPORT
+        // ============================================================
+        function authorName(author) {
+            return state.people[author].name;
+        }
+
+        function exportChat(opts) {
+            var res = exportChatShared(msgs, opts, function (isOwn) {
+                var a = isOwn ? state.currentPerspective
+                              : (state.currentPerspective === 'own' ? 'other' : 'own');
+                return state.people[a].name;
+            });
+            if (!res) { showClipToast('Nothing matched'); return; }
+            writeClipboard(res.payload, function (status) {
+                showClipToast(status === 'ok' ? ('Copied ' + res.count) : 'Copy blocked');
+            });
+        }
+
+        initClipModal({ onCopy: exportChat });
+
+
+        // ============================================================
+        // PERSISTENCE
+        // ============================================================
+        function saveState() {
+            try {
+                var arr = [];
+
+                // If autoplay is active, the DOM only contains the playback
+                // view (delivered incoming messages + your typed ones). The
+                // ORIGINAL conversation is kept in autoPlay.savedSnapshot.
+                // Persist that as `msgs` so a reload doesn't overwrite the
+                // original chat with the partial playback view.
+                var useSnapshot = (autoPlay && autoPlay.active &&
+                                   autoPlay.savedSnapshot &&
+                                   autoPlay.savedSnapshot.length);
+                if (useSnapshot) {
+                    for (var si = 0; si < autoPlay.savedSnapshot.length; si++) {
+                        var sm = autoPlay.savedSnapshot[si];
+                        arr.push({
+                            t: sm.text,
+                            a: sm.author,
+                            r: !!sm.reacted,
+                            d: sm.delay || 0,
+                        });
+                    }
+                } else {
+                    var nodes = msgs.querySelectorAll('.msg');
+                    for (var i = 0; i < nodes.length; i++) {
+                        var n = nodes[i];
+                        var raw = n.getAttribute('data-raw');
+                        if (raw == null) raw = n.textContent;
+                        arr.push({
+                            t: raw,
+                            a: n.getAttribute('data-author') || 'own',
+                            r: n.classList.contains('reacted'),
+                            d: parseInt(n.getAttribute('data-delay') || '0', 10) || 0,
+                        });
+                    }
+                }
+
+                var ap = null;
+                if (autoPlay && autoPlay.active) {
+                    ap = {
+                        active: true,
+                        seq: autoPlay.seq,
+                        nextOwnIdx: autoPlay.nextOwnIdx,
+                        nextOtherIdx: autoPlay.nextOtherIdx,
+                        savedSnapshot: autoPlay.savedSnapshot,
+                        playbackDom: autoPlay.playbackDom || [],
+                        firstPendingDone: !autoPlay.firstPending,
+                        pending: autoPlay.pending ? {
+                            idx: autoPlay.pending.idx,
+                            side: autoPlay.pending.side,
+                            frozen: autoPlay.frozen,
+                            hasTimer: (autoPlay.timer !== null),
+                        } : null,
+                    };
+                }
+                localStorage.setItem(STORE_KEY, JSON.stringify({
+                    msgs: arr,
+                    people: state.people,
+                    currentPerspective: state.currentPerspective,
+                    fontSize: state.fontSize,
+                    autoPlay: ap,
+                    bot: {
+                        active: state.bot.active,
+                        answers: state.bot.answers,
+                    },
+                }));
+            } catch (e) {}
+        }
+
+        function loadState() {
+            var raw;
+            try { raw = localStorage.getItem(STORE_KEY); } catch (e) { return false; }
+            if (!raw) return false;
+            var d;
+            try { d = JSON.parse(raw); } catch (e) { return false; }
+            if (!d) return false;
+
+            if (d.people && d.people.own && d.people.other) {
+                state.people = d.people;
+            }
+            if (d.currentPerspective === 'own' || d.currentPerspective === 'other') {
+                state.currentPerspective = d.currentPerspective;
+            }
+            if (typeof d.fontSize === 'number') state.fontSize = d.fontSize;
+
+            // If autoplay is active, the stored `msgs` is the PRE-PLAY chat
+            // (kept for the ⏸ restore). We do NOT want it on screen during
+            // playback — resume() will rebuild the playback screen from
+            // playbackDom instead.
+            var apActive = !!(d.autoPlay && d.autoPlay.active);
+
+            if (!apActive && d.msgs && d.msgs.length) {
+                var p = state.currentPerspective;
+                for (var i = 0; i < d.msgs.length; i++) {
+                    var m = d.msgs[i];
+                    var author = m.a || 'own';
+                    var el = createMsgNode(m.t, author, m.d || 0, !!m.r, p);
+                    msgs.appendChild(el);
+                }
+            }
+
+            // Bot state.
+            if (d.bot) {
+                if (typeof d.bot.active === 'boolean') state.bot.active = d.bot.active;
+                if (Array.isArray(d.bot.answers) && d.bot.answers.length) {
+                    state.bot.answers = d.bot.answers;
+                }
+            }
+
+            // Stash autoplay resume data for boot() to use.
+            if (apActive) {
+                window.__resumeAutoPlay = d.autoPlay;
+            }
+            refreshBubbles();
+            return true;
+        }
+
+
+        // ============================================================
+        // SCROLL + REACTIONS
+        // ============================================================
+        msgs.addEventListener('scroll', function () {
+            if (state.isProgrammaticScroll) { state.isProgrammaticScroll = false; return; }
+            state.userScrolledUp = (msgs.scrollHeight - msgs.scrollTop - msgs.clientHeight) >= 10;
+        });
+
+        msgs.addEventListener('dblclick', function (e) {
+            var msg = e.target.closest('.msg');
+            if (!msg) return;
+            msg.classList.toggle('reacted');
+            saveState();
+        });
+
+
+        // ============================================================
+        // KEYBOARD
+        // ============================================================
+        ownInput.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
+        });
+
+        // === BOT MODE v1.2 ===
+
+        // --- typing indicator ---
+        function showTyping(author) {
+            var el = document.getElementById('chatStatus');
+            if (!el) return;
+            el.textContent = 'typing…';
+            el.classList.add('typing');
+        }
+
+        function hideTyping() {
+            var el = document.getElementById('chatStatus');
+            if (!el) return;
+            el.textContent = 'online';
+            el.classList.remove('typing');
+        }
+
+        // ---- BOT DOM (created programmatically) ----
+        var botModal = document.createElement('div');
+        botModal.className = 'modal';
+        botModal.id = 'botModal';
+        botModal.innerHTML =
+            '<div class="modal-box">' +
+            '   <h3>Bot answers</h3>' +
+            '   <label class="sub">One answer per line.</label>' +
+            '   <textarea id="botTextarea" rows="12" ' +
+            '       style="width:100%;padding:8px 12px;background:#333;border:none;' +
+            '       border-radius:8px;color:#e0e0e0;font-size:13px;font-family:inherit;' +
+            '       resize:vertical;"></textarea>' +
+            '   <div class="btn-row">' +
+            '       <button class="btn-cancel" id="botCancel">Cancel</button>' +
+            '       <button class="btn-save"   id="botSave">Save</button>' +
+            '   </div>' +
+            '</div>';
+        document.body.appendChild(botModal);
+
+        var botTextarea = document.getElementById('botTextarea');
+        var botCancel   = document.getElementById('botCancel');
+        var botSave     = document.getElementById('botSave');
+
+        function updateBotUI() {
+            var el = document.getElementById('botToggle');
+            if (!el) return;
+            if (state.bot.active) {
+                el.style.color = '#e8edf2';
+                el.style.background = '#2b5278';
+            } else {
+                el.style.color = '';
+                el.style.background = '';
+            }
+        }
+
+        botCancel.onclick = function () { closeModal('botModal'); };
+        botModal.onclick = function (e) { if (e.target === botModal) closeModal('botModal'); };
+        botSave.onclick = function () {
+            var lines = botTextarea.value.split(/\r?\n/).map(function (s) { return s.trim(); })
+                              .filter(function (s) { return s.length; });
+            state.bot.answers = lines.length ? lines : state.bot.answers;
+            saveState();
+            closeModal('botModal');
+        };
+
+        var autoPlay = {
+            active: false,
+            seq: [],
+            nextOwnIdx: 0,
+            nextOtherIdx: 0,
+            pending: null,
+            timer: null,
+            pendingDelay: 0,
+            frozen: false,     // true => waiting for a user send to start timer
+            savedSnapshot: null,
+            playbackDom: [],   // [{text, author, delay}] shown during playback
+
+            start: function () {
+                var nodes = msgs.querySelectorAll('.msg');
+                this.seq = [];
+                for (var i = 0; i < nodes.length; i++) {
+                    var n = nodes[i];
+                    this.seq.push({
+                        text:   n.getAttribute('data-raw')    || n.textContent,
+                        author: n.getAttribute('data-author') || 'own',
+                        delay:  parseInt(n.getAttribute('data-delay') || '0', 10) || 0,
+                    });
+                }
+                if (!this.seq.length) return;
+
+                this.savedSnapshot = [];
+                for (var j = 0; j < nodes.length; j++) {
+                    var nn = nodes[j];
+                    this.savedSnapshot.push({
+                        text:    nn.getAttribute('data-raw')    || nn.textContent,
+                        author:  nn.getAttribute('data-author') || 'own',
+                        delay:   parseInt(nn.getAttribute('data-delay') || '0', 10) || 0,
+                        reacted: nn.classList.contains('reacted'),
+                    });
+                }
+
+                this.nextOwnIdx = 0;
+                while (this.nextOwnIdx < this.seq.length &&
+                       this.seq[this.nextOwnIdx].author !== 'own') this.nextOwnIdx++;
+                this.nextOtherIdx = 0;
+                while (this.nextOtherIdx < this.seq.length &&
+                       this.seq[this.nextOtherIdx].author !== 'other') this.nextOtherIdx++;
+
+                this.active = true;
+                this.timer = null;
+                this.pending = null;
+                this.frozen = false;
+
+                var btn = document.getElementById('playBtn');
+                if (btn) btn.textContent = '⏸';
+
+                msgs.innerHTML = '';
+                state.userScrolledUp = false;
+                this.playbackDom = [];
+
+                this.scheduleNext(true);   // true == this is the first pending
+                saveState();
+            },
+
+            // Determine the next pending incoming message and set its gate state.
+            // isFirst: if true, use the 2s warmup regardless of gate rules.
+            scheduleNext: function (isFirst) {
+                if (!this.active) return;
+
+                var sideIsOwn = (state.currentPerspective === 'own');
+                var idx = sideIsOwn ? this.nextOtherIdx : this.nextOwnIdx;
+
+                if (idx >= this.seq.length) {
+                    this.pending = null;
+                    this.frozen = false;
+                    if (this.timer) { clearTimeout(this.timer); this.timer = null; }
+                    return;
+                }
+
+                var m = this.seq[idx];
+
+                // Decide gate:
+                //   first pending     -> 2s warmup, no gate, runs immediately
+                //   prev == myAuthor  -> gated (frozen until send)
+                //   else              -> runs immediately
+                var prevAuthor = (idx > 0) ? this.seq[idx - 1].author : null;
+                var myAuthor   = state.currentPerspective;
+
+                this.pending = {
+                    text:   m.text,
+                    author: m.author,
+                    idx:    idx,
+                    side:   sideIsOwn ? 'other' : 'own',
+                    delay:  m.delay || 500,
+                };
+                this.pendingDelay = this.pending.delay;
+
+                if (this.timer) { clearTimeout(this.timer); this.timer = null; }
+
+                if (isFirst && idx === 0) {
+                    // 2s warmup: only when the first pending IS the very
+                    // first message of the recording.
+                    this.frozen = false;
+                    showTyping(this.pending.author);
+                    var self = this;
+                    this.timer = setTimeout(function () {
+                        self.timer = null;
+                        self.deliver();
+                    }, 2000);
+                } else if (prevAuthor === myAuthor) {
+                    // gated: wait for user's send
+                    this.frozen = true;
+                } else {
+                    // runs immediately
+                    this.frozen = false;
+                    showTyping(this.pending.author);
+                    var self2 = this;
+                    this.timer = setTimeout(function () {
+                        self2.timer = null;
+                        self2.deliver();
+                    }, this.pendingDelay);
+                }
+            },
+
+            deliver: function () {
+                if (!this.active) return;
+                if (!this.pending) return;
+
+                hideTyping();
+                addMsgSilent(this.pending.text, this.pending.author, this.pending.delay || 0);
+
+                if (this.pending.side === 'other') {
+                    this.nextOtherIdx = this.pending.idx + 1;
+                    while (this.nextOtherIdx < this.seq.length &&
+                           this.seq[this.nextOtherIdx].author !== 'other') this.nextOtherIdx++;
+                } else {
+                    this.nextOwnIdx = this.pending.idx + 1;
+                    while (this.nextOwnIdx < this.seq.length &&
+                           this.seq[this.nextOwnIdx].author !== 'own') this.nextOwnIdx++;
+                }
+
+                this.pending = null;
+                this.timer = null;
+                this.frozen = false;
+                this.scheduleNext(false);
+                saveState();
+            },
+
+            // Called on every user send during playback.
+            // Only affects REPLIES (pending whose recorded predecessor was
+            // authored by the current perspective).
+            // Continuations are left alone — their timing is not ours to
+            // change.
+            kick: function () {
+                if (!this.active) return;
+                if (!this.pending) return;
+
+                var i = this.pending.idx;
+                var prevAuthor = (i > 0) ? this.seq[i - 1].author : null;
+                var isReply = (prevAuthor === state.currentPerspective);
+
+                if (!isReply) return;   // continuation — leave the timer alone
+
+                if (this.timer) { clearTimeout(this.timer); this.timer = null; }
+
+                var self = this;
+                this.frozen = false;
+                showTyping(this.pending.author);
+                this.timer = setTimeout(function () {
+                    self.timer = null;
+                    self.deliver();
+                }, this.pendingDelay);
+                saveState();
+            },
+
+            // Empty Enter during playback: if a countdown is running,
+            // deliver the pending message immediately. If the pending is
+            // frozen or absent, do nothing.
+            flush: function () {
+                if (!this.active) return;
+                if (!this.pending) return;
+                if (this.timer === null) return;   // frozen or idle
+                clearTimeout(this.timer);
+                this.timer = null;
+                this.frozen = false;
+                this.deliver();
+            },
+
+            onPerspectiveChange: function () {
+                if (!this.active) return;
+                hideTyping();
+                if (this.timer) { clearTimeout(this.timer); this.timer = null; }
+                this.pending = null;
+                this.frozen = false;
+                this.scheduleNext(false);
+            },
+
+            stop: function () {
+                this.active = false;
+                hideTyping();
+                if (this.timer) { clearTimeout(this.timer); this.timer = null; }
+
+                if (this.savedSnapshot) {
+                    msgs.innerHTML = '';
+                    for (var i = 0; i < this.savedSnapshot.length; i++) {
+                        var m = this.savedSnapshot[i];
+                        var el = createMsgNode(m.text, m.author, m.delay || 0, !!m.reacted, state.currentPerspective);
+                        msgs.appendChild(el);
+                    }
+                    applyFontSize();
+                    state.isProgrammaticScroll = true;
+                    msgs.scrollTop = msgs.scrollHeight;
+                }
+
+                refreshBubbles();
+                this.seq = [];
+                this.savedSnapshot = null;
+                this.playbackDom = [];
+                this.pending = null;
+                this.pendingDelay = 0;
+                this.frozen = false;
+
+                var btn = document.getElementById('playBtn');
+                if (btn) btn.textContent = '▶';
+                saveState();
+            },
+
+            // Restore playback state from a saved payload.
+            // Called from boot() if window.__resumeAutoPlay is set.
+            resume: function (d) {
+                if (!d || !d.seq || !d.seq.length) return false;
+
+                this.seq = d.seq;
+                this.nextOwnIdx = d.nextOwnIdx || 0;
+                this.nextOtherIdx = d.nextOtherIdx || 0;
+                this.savedSnapshot = d.savedSnapshot || null;
+                this.firstPending = !d.firstPendingDone;
+                this.active = true;
+                this.timer = null;
+                this.pending = null;
+                this.frozen = false;
+
+                var btn = document.getElementById('playBtn');
+                if (btn) btn.textContent = '⏸';
+
+                // Rebuild the playback screen from playbackDom.
+                msgs.innerHTML = '';
+                state.userScrolledUp = false;
+                this.playbackDom = d.playbackDom || [];
+
+                for (var pi = 0; pi < this.playbackDom.length; pi++) {
+                    var pm = this.playbackDom[pi];
+                    // addMsgSilent would append to playbackDom again, so
+                    // build the DOM node manually here.
+                    var pEl = createMsgNode(pm.text, pm.author, pm.delay || 0, false, state.currentPerspective);
+                    msgs.appendChild(pEl);
+                }
+                applyFontSize();
+                state.isProgrammaticScroll = true;
+                msgs.scrollTop = msgs.scrollHeight;
+
+                // Re-arm the pending.
+                if (d.pending) {
+                    // Re-derive pending from the cursors (the saved pending
+                    // descriptor carries idx/side/frozen/hasTimer).
+                    var sideIsOwn = (state.currentPerspective === 'own');
+                    var idx = sideIsOwn ? this.nextOtherIdx : this.nextOwnIdx;
+                    if (idx < this.seq.length) {
+                        var m = this.seq[idx];
+                        this.pending = {
+                            text:   m.text,
+                            author: m.author,
+                            idx:    idx,
+                            side:   sideIsOwn ? 'other' : 'own',
+                            delay:  m.delay || 500,
+                        };
+                        this.pendingDelay = this.pending.delay;
+
+                        if (d.pending.frozen) {
+                            this.frozen = true;
+                            // no timer
+                        } else {
+                            this.frozen = false;
+                            showTyping(this.pending.author);
+                            var self = this;
+                            this.timer = setTimeout(function () {
+                                self.timer = null;
+                                self.deliver();
+                            }, this.pendingDelay);
+                        }
+                    } else {
+                        // Nothing to arm — idle.
+                        this.pending = null;
+                        this.frozen = false;
+                    }
+                } else {
+                    // No pending at time of save. Schedule the next one
+                    // normally (this may set it as frozen or running).
+                    this.scheduleNext(this.firstPending);
+                }
+
+                saveState();
+                return true;
+            },
+        };
+
+
+        // addMsg variant used during playback: doesn't touch _lastSendAt,
+        // doesn't saveState, doesn't disturb autoplay.
+        function addMsgSilent(text, author, delay) {
+            _msgApp.autoPlay = autoPlay;
+            chatAddMsg(_msgApp, text, author,
+                       { silent: true, delay: delay || 0, trackPlayback: true });
+        }
+
+        // ============================================================
+        // BOOT
+        // ============================================================
+        function boot() {
+            buildMenu();
+            // ---- settings modal wiring ----
+            var settingsModal = document.getElementById('settingsModal');
+            document.getElementById('dotsBtn').onclick = function () {
+                openModal('settingsModal');
+            };
+            document.getElementById('settingsClose').onclick = function () {
+                closeModal('settingsModal');
+            };
+            settingsModal.onclick = function (e) {
+                if (e.target === settingsModal) closeModal('settingsModal');
+            };
+
+            initMenu();
+            loadState();
+            // click avatar = Alt+M
+            var _av = document.getElementById('avatar');
+            if (_av) _av.style.cursor = 'pointer';
+            if (_av) _av.addEventListener('click', function () { togglePerspective(); });
+            // Alt+M switches perspective
+            document.addEventListener('keydown', function (e) {
+                if (e.altKey && (e.key === 'm' || e.key === 'M')) {
+                    e.preventDefault();
+                    togglePerspective();
+                }
+            });
+            applyFontSize();
+            updateModeUI();      // also refreshes all msg styles
+
+            if (window.__resumeAutoPlay) {
+                autoPlay.resume(window.__resumeAutoPlay);
+                window.__resumeAutoPlay = null;
+            }
+
+            updateBotUI();
+            modalInitStack(['settingsModal', 'clipModal', 'modal', 'botModal']);
+
+            setTimeout(function () {
+                state.isProgrammaticScroll = true;
+                msgs.scrollTop = msgs.scrollHeight;
+            }, 100);
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', boot);
+        } else {
+            boot();
+        }
+    </script>
+
+</body>
+
+</html>
