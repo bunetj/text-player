@@ -48,6 +48,19 @@
             <div class="textbox-area">
                 <textarea id="inputText" placeholder="Paste script with --- between messages"></textarea>
             </div>
+            <div class="toolbar" id="toolbar-bottom">
+                <div class="menu-section">
+                    <span class="menu-label">PREP</span>
+                    <button class="menu-btn" id="lowBtn">low</button>
+                    <button class="menu-btn" id="punctBtn">punct</button>
+                    <button class="menu-btn" id="sentBtn">sentences</button>
+                </div>
+                <div class="menu-section">
+                    <span class="menu-label">CHUNK words:</span>
+                    <input type="number" id="wordCountInput" value="3" min="1" style="width:48px;padding:2px 12px 2px 8px;background:#2b3b4a;border:none;border-radius:4px;color:#e8edf2;font-size:12px;text-align:center;">
+                    <button class="menu-btn" id="applyBtn">apply</button>
+                </div>
+            </div>
             <div class="chat-footer">
                 <span class="chat-info" title="">send empty to receive ℹ️</span>
             </div>
@@ -417,18 +430,7 @@
 function buildMenu() {
     var toolbar = document.getElementById('toolbar');
     toolbar.innerHTML =
-        '<div class="menu-section">' +
-        '   <span class="menu-label">PREP</span>' +
-        '   <button class="menu-btn" id="lowBtn">low</button>' +
-        '   <button class="menu-btn" id="punctBtn">punct</button>' +
-        '   <button class="menu-btn" id="sentBtn">sentences</button>' +
-        '</div>' +
-        '<div class="menu-section">' +
-        '   <span class="menu-label">CHUNK words:</span>' +
-        '   <input type="number" id="wordCountInput" value="3" min="1" style="width:48px;padding:2px 12px 2px 8px;background:#2b3b4a;border:none;border-radius:4px;color:#e8edf2;font-size:12px;text-align:center;">' +
-        '   <button class="menu-btn" id="applyBtn">apply</button>' +
-        '</div>' +
-        '<div class="menu-section">' +
+                '<div class="menu-section">' +
         '   <span class="menu-label">FONT</span>' +
         '   <button class="menu-btn" id="fontSmall">A−</button>' +
         '   <span class="menu-label-display" id="sizeLabel">14px</span>' +
@@ -709,8 +711,7 @@ function initMenu() {
         };
 
     buildMenu();
-    // reorganizeMenu();  // disabled: section-per-row is enforced in telegram.css
-        initMenu();
+            initMenu();
         var __restored = loadState();
         applyFontSize();
         updateChatName();

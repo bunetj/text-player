@@ -34,9 +34,7 @@
             gap: 8px;
         }
 
-        .textbox-area {
-            flex-shrink: 0;
-        }
+        .textbox-area { flex-shrink: 0; }
 
         .textbox-area textarea {
             width: 100%;
@@ -50,14 +48,8 @@
             resize: vertical;
             font-family: inherit;
         }
-
-        .textbox-area textarea:focus {
-            outline: none;
-        }
-
-        .textbox-area textarea::placeholder {
-            color: #5e6f7e;
-        }
+        .textbox-area textarea:focus { outline: none; }
+        .textbox-area textarea::placeholder { color: #5e6f7e; }
 
         .toolbar {
             flex-shrink: 0;
@@ -70,7 +62,6 @@
             border: 1px solid #333333;
             align-items: center;
         }
-
         .menu-section {
             display: flex;
             align-items: center;
@@ -78,11 +69,7 @@
             padding: 0 4px;
             border-right: 1px solid #333333;
         }
-
-        .menu-section:last-child {
-            border-right: none;
-        }
-
+        .menu-section:last-child { border-right: none; }
         .menu-label {
             font-size: 10px;
             color: #5e6f7e;
@@ -91,7 +78,6 @@
             margin-right: 4px;
             font-weight: 600;
         }
-
         .menu-btn {
             background: transparent;
             border: none;
@@ -101,14 +87,12 @@
             cursor: pointer;
             font-size: 13px;
         }
-
         .menu-label-display {
             font-size: 11px;
             color: #8e9aa5;
             min-width: 28px;
             text-align: center;
         }
-
         .menu-range {
             width: 60px;
             accent-color: #7a7a7a;
@@ -116,7 +100,6 @@
             height: 4px;
             border-radius: 2px;
         }
-
         .menu-range::-webkit-slider-thumb {
             -webkit-appearance: none;
             width: 12px;
@@ -125,7 +108,6 @@
             background: #7a7a7a;
             cursor: pointer;
         }
-
         .menu-range::-moz-range-thumb {
             width: 12px;
             height: 12px;
@@ -134,7 +116,6 @@
             border: none;
             cursor: pointer;
         }
-
         .menu-input-label {
             display: flex;
             align-items: center;
@@ -143,7 +124,6 @@
             font-weight: 400;
             color: #8e9aa5;
         }
-
         .menu-input-label input {
             width: 48px;
             padding: 2px 12px 2px 8px;
@@ -154,10 +134,7 @@
             font-size: 12px;
             text-align: center;
         }
-
-        .menu-input-label input:focus {
-            outline: 1px solid #7a7a7a;
-        }
+        .menu-input-label input:focus { outline: 1px solid #7a7a7a; }
 
         .sub-wrap {
             flex: 1;
@@ -170,7 +147,6 @@
             padding: 20px;
             min-height: 0;
         }
-
         .sub-text {
             background: #000;
             color: #fff;
@@ -191,37 +167,11 @@
             justify-content: flex-end;
             flex-shrink: 0;
         }
+        .footer-info { color: #5e6f7e; font-size: 12px; cursor: default; }
 
-        .footer-info {
-            color: #5e6f7e;
-            font-size: 12px;
-            cursor: default;
-        }
-
-        
-
-        
-
-        
-
-        .modal-box h3 {
-            color: #e8edf2;
-            margin-bottom: 2px;
-        }
-
-        .modal-box .sub {
-            color: #5e6f7e;
-            font-size: 12px;
-            margin-bottom: 14px;
-        }
-
-        .modal-box label {
-            color: #8e9aa5;
-            font-size: 12px;
-            display: block;
-            margin-bottom: 2px;
-        }
-
+        .modal-box h3 { color: #e8edf2; margin-bottom: 2px; }
+        .modal-box .sub { color: #5e6f7e; font-size: 12px; margin-bottom: 14px; }
+        .modal-box label { color: #8e9aa5; font-size: 12px; display: block; margin-bottom: 2px; }
         .modal-box input {
             width: 100%;
             padding: 8px 12px;
@@ -232,17 +182,8 @@
             margin-bottom: 12px;
             font-size: 14px;
         }
-
-        .modal-box input:focus {
-            outline: none;
-        }
-
-        .modal-box .btn-row {
-            display: flex;
-            gap: 8px;
-            justify-content: flex-end;
-        }
-
+        .modal-box input:focus { outline: none; }
+        .modal-box .btn-row { display: flex; gap: 8px; justify-content: flex-end; }
         .modal-box .btn-row button {
             padding: 6px 16px;
             border: none;
@@ -250,16 +191,8 @@
             cursor: pointer;
             font-size: 13px;
         }
-
-        .modal-box .btn-cancel {
-            background: #333333;
-            color: #8e9aa5;
-        }
-
-        .modal-box .btn-save {
-            background: #3a3a3a;
-            color: #e8edf2;
-        }
+        .modal-box .btn-cancel { background: #333333; color: #8e9aa5; }
+        .modal-box .btn-save { background: #3a3a3a; color: #e8edf2; }
 
         .bottom-bar {
             flex-shrink: 0;
@@ -296,42 +229,17 @@
         .bottom-bar .bar-gear:hover { color: #e8edf2; }
 
         @media (max-width: 440px) {
-            .app {
-                padding: 4px;
-                max-height: 100vh;
-                height: 100vh;
-            }
-
-            .toolbar {
-                padding: 4px 6px;
-                gap: 2px;
-            }
-
-            .menu-section {
-                padding: 0 2px;
-            }
-
-            .menu-label {
-                font-size: 9px;
-                display: none;
-            }
-
-            .menu-btn {
-                font-size: 12px;
-                padding: 2px 6px;
-            }
-
-            .menu-range {
-                width: 40px;
-            }
-
-            .sub-text {
-                font-size: 20px;
-                padding: 8px 16px;
-            }
+            .app { padding: 4px; max-height: 100vh; height: 100vh; }
+            .toolbar { padding: 4px 6px; gap: 2px; }
+            .menu-section { padding: 0 2px; }
+            .menu-label { font-size: 9px; display: none; }
+            .menu-btn { font-size: 12px; padding: 2px 6px; }
+            .menu-range { width: 40px; }
+            .sub-text { font-size: 20px; padding: 8px 16px; }
         }
     </style>
-    <style>
+
+<style>
 /* ===== INLINED modal.css ===== */
 /* shared/modal.css — one modal look for all apps */
 .modal {
@@ -417,6 +325,39 @@
 }
 
 </style>
+    <style id="no-radius">
+.app,
+.sub-wrap,
+.sub-text,
+.toolbar,
+.textbox-area textarea,
+.bottom-bar,
+.bottom-bar .bar-play,
+.bottom-bar .bar-gear,
+.menu-btn,
+.menu-section,
+.menu-range,
+.menu-range::-webkit-slider-thumb,
+.menu-range::-moz-range-thumb,
+.menu-input-label input,
+#wordCountInput {
+    border-radius: 0 !important;
+}
+</style>
+    <style id="play-button">
+.bottom-bar .bar-play {
+    background: transparent;
+    color: #8e9aa5;
+    font-size: 20px;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+}
+.bottom-bar .bar-play:hover {
+    background: transparent;
+    color: #e8edf2;
+}
+</style>
 </head>
 
 <body>
@@ -427,8 +368,8 @@
         </div>
 
         <div class="bottom-bar">
-            <button class="menu-btn bar-play" id="playBtn" title="Play">▶</button>
-            <button class="menu-btn bar-gear" id="gearBtn" title="Menu">⚙</button>
+            <button class="menu-btn bar-play" id="playBtn">▶</button>
+            <button class="menu-btn bar-gear" id="gearBtn">⚙</button>
         </div>
     </div>
 
@@ -443,117 +384,11 @@
         </div>
     </div>
 
-                <link rel="stylesheet" href="../shared/modal.css">
-<script src="../shared/modal.js"></script>
-<script src="../shared/ui.js"></script>
-<script>
-/* ===== INLINED text.js ===== */
-// shared/text.js — shared text helpers (extracted verbatim from apps)
-// Apps must NOT redefine these locally.
-
-function splitByBlankLines(text) {
-    return text.split(/\n\s*\n/).filter(s => s.trim() !== '');
-}
-
-function splitBySeparator(text, sep) {
-    // sep is a string like '\n---\n'; kept explicit so Telegram and
-    // Subtitles/LED can use different delimiters without forking logic.
-    return text.split(sep).filter(s => s.trim() !== '');
-}
-
-function splitWords(text, n) {
-    const words = text.split(/\s+/).filter(w => w.length > 0);
-    const chunks = [];
-    for (let i = 0; i < words.length; i += n) {
-        chunks.push(words.slice(i, i + n).join(' '));
-    }
-    return chunks;
-}
-
-function toLower(text) {
-    let output = text.replace(/—/g, '-').replace(/–/g, '-').replace(/ -- /g, ' - ');
-    output = output.replace(/[""]/g, '"').replace(/['']/g, "'").replace(/[‚‛]/g, "'")
-        .replace(/[„“”]/g, '"').replace(/[’‘]/g, "'").replace(/[‹›]/g, "'")
-        .replace(/[«»]/g, '"');
-    const parts = output.split(/(\s+)/);
-    const result = [];
-    for (let i = 0; i < parts.length; i++) {
-        const p = parts[i];
-        if (!/[a-zA-Zа-яА-Я]/.test(p)) { result.push(p); continue; }
-        const latinOnly = p.replace(/[^a-zA-Z]/g, '');
-        const isLatinCaps = latinOnly.length >= 2 && latinOnly === latinOnly.toUpperCase();
-        const cyrOnly = p.replace(/[^а-яА-Я]/g, '');
-        const isCyrCaps = cyrOnly.length >= 2 && cyrOnly === cyrOnly.toUpperCase();
-        if (isLatinCaps || isCyrCaps) { result.push(p); continue; }
-        result.push(p.toLowerCase());
-    }
-    return result.join('');
-}
-
-function removePunctuation(text) {
-    return text.replace(/[^\w\s\n]/g, '');
-}
-
-function splitPunct(text) {
-    // Split on . , ! ? ; : only when followed by whitespace or end of string.
-    // Keeps URLs (https://...), times (10:30), decimals (1.5), etc. intact.
-    const chars = '. , ! ? ; :'.split(' ');
-    const punctClass = '.!?;:';
-    const lines = [];
-    let current = '';
-    for (let i = 0; i < text.length; i++) {
-        const c = text[i];
-        current += c;
-        if (punctClass.indexOf(c) !== -1) {
-            const next = text[i + 1];
-            if (next === undefined || /\s/.test(next)) {
-                lines.push(current);
-                current = '';
-            }
-        }
-    }
-    if (current) lines.push(current);
-    return lines.map(function (s) { return s.trim(); }).filter(function (s) { return s; });
-}
-
-function splitSentences(text) {
-    const result = [];
-    let start = 0;
-    let i = 0;
-    while (i < text.length) {
-        if (text[i] === '…' || (text[i] === '.' && text[i + 1] === '.' && text[i + 2] === '.')) {
-            const len = text[i] === '…' ? 1 : 3;
-            const next = text[i + len] || '';
-            if (next === ' ' || next === '\n' || next === '\t' || !next) {
-                result.push(text.slice(start, i + len));
-                start = i + len;
-                i += len;
-                continue;
-            }
-        }
-        if (text[i] === '.' || text[i] === '!' || text[i] === '?') {
-            const next = text[i + 1] || '';
-            if (next === ' ' || next === '\n' || next === '\t' || !next) {
-                result.push(text.slice(start, i + 1));
-                start = i + 1;
-            }
-        }
-        i++;
-    }
-    if (start < text.length) result.push(text.slice(start));
-    return result.length ? result : [text];
-}
-
-function applyLow(text, settings) {
-    let result = text;
-    if (settings.lowercase) result = toLower(result);
-    if (settings.noPunct) result = removePunctuation(result);
-    if (settings.oneLine) result = result.replace(/\s+/g, ' ').trim();
-    return result;
-}
-
-</script>
-        <script src="../shared/prep.js"></script>
+                <link rel="stylesheet" href="../../shared/modal.css">
+<script src="../../shared/modal.js"></script>
+<script src="../../shared/ui.js"></script>
+<script src="../../shared/text.js"></script>
+<script src="../../shared/prep.js"></script>
 <script>
         // ============================================================
         // SUBTITLE MFV - Minimal Functional Version
@@ -1112,8 +947,49 @@ function applyLow(text, settings) {
         }
         applyFontSize();
         render();
-    </script>
-        <script src="../shared/bridge.js"></script>
+
+        // ============================================================
+        // MOBILE: tap left/right half of the display acts as ← / →
+        // Desktop mouse clicks are ignored.
+        // ============================================================
+        (function () {
+            var wrap = document.querySelector('.sub-wrap');
+            if (!wrap) return;
+
+            wrap.style.touchAction = 'manipulation';
+            wrap.style.webkitTapHighlightColor = 'transparent';
+
+            function step(dir) {
+                var items = state.blocks;
+                if (!items.length) return;
+                if (autoPlay && autoPlay.isPlaying()) autoPlay.stopPlay();
+                if (dir < 0) state.idx = Math.max(0, state.idx - 1);
+                else         state.idx = Math.min(items.length - 1, state.idx + 1);
+                render();
+            }
+
+            // Real touch taps only. touchend covers iOS/Android;
+            // pointerup with pointerType==='touch' covers modern Chromium.
+            // We do NOT listen to 'click' at all, so desktop mouse is a no-op.
+            function handleTouchPoint(clientX) {
+                var rect = wrap.getBoundingClientRect();
+                step((clientX - rect.left) < rect.width / 2 ? -1 : 1);
+            }
+
+            wrap.addEventListener('touchend', function (e) {
+                var t = e.changedTouches && e.changedTouches[0];
+                if (!t) return;
+                handleTouchPoint(t.clientX);
+            }, { passive: true });
+
+            wrap.addEventListener('pointerup', function (e) {
+                if (e.pointerType !== 'touch') return;
+                handleTouchPoint(e.clientX);
+            }, { passive: true });
+        })();
+
+</script>
+        <script src="../../shared/bridge.js"></script>
 </body>
 
 </html>
