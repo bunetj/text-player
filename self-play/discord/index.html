@@ -17,17 +17,17 @@
             padding: 0;
             box-sizing: border-box;
             scrollbar-width: thin;
-            scrollbar-color: #202225 #2f3136;
+            scrollbar-color: #2a2d33 #3a3d44;
         }
         
         ::-webkit-scrollbar {
             width: 8px;
         }
         ::-webkit-scrollbar-track {
-            background: #2f3136;
+            background: #3a3d44;
         }
         ::-webkit-scrollbar-thumb {
-            background: #202225;
+            background: #2a2d33;
             border-radius: 4px;
         }
         ::-webkit-scrollbar-thumb:hover {
@@ -59,7 +59,7 @@
            ============================================ */
         .sidebar {
             width: 240px;
-            background: #1e1f22;
+            background: #26292f;
             display: flex;
             flex-direction: column;
             flex-shrink: 0;
@@ -69,13 +69,13 @@
         /* Server Header */
         .server-header {
             padding: 12px 16px;
-            border-bottom: 2px solid #2b2d31;
+            border-bottom: 2px solid #3a3d44;
             display: flex;
             justify-content: space-between;
             align-items: center;
             /* cursor: pointer; removed */
             min-height: 48px;
-            background: #1e1f22;
+            background: #26292f;
             transition: background 0.1s ease;
         }
         
@@ -93,7 +93,7 @@
         /* Channel Categories */
         .channel-category {
             padding: 16px 16px 4px 16px;
-            color: #949ba4;
+            color: #b9c0c9;
             font-size: 12px;
             font-weight: 600;
             letter-spacing: 0.5px;
@@ -143,7 +143,7 @@
             border-radius: 4px;
             margin: 1px 0;
             transition: background 0.1s ease;
-            color: #949ba4;
+            color: #b9c0c9;
             font-size: 15px;
             font-weight: 500;
             min-height: 32px;
@@ -151,12 +151,12 @@
         }
         
         .chat-item:hover {
-            background: #2b2d31;
+            background: #3a3d44;
             color: #dbdee1;
         }
         
         .chat-item.active {
-            background: #2b2d31;
+            background: #3a3d44;
             color: #dbdee1;
         }
         
@@ -169,7 +169,7 @@
         
         .chat-item .chat-name::before {
             content: '#';
-            color: #949ba4;
+            color: #b9c0c9;
             margin-right: 4px;
             font-weight: 400;
         }
@@ -193,7 +193,7 @@
         .chat-action-btn {
             background: transparent;
             border: none;
-            color: #949ba4;
+            color: #b9c0c9;
             /* cursor: pointer; removed */
             padding: 2px 6px;
             border-radius: 3px;
@@ -213,14 +213,14 @@
         /* Footer */
         .sidebar-footer {
             padding: 12px 16px;
-            border-top: 1px solid #2b2d31;
+            border-top: 1px solid #3a3d44;
             margin-top: auto;
             flex-shrink: 0;
         }
         
         .sidebar-footer button {
             background: transparent;
-            color: #949ba4;
+            color: #b9c0c9;
             border: none;
             padding: 4px 8px;
             border-radius: 4px;
@@ -250,9 +250,9 @@
             display: flex;
             align-items: center;
             padding: 12px 16px;
-            border-bottom: 1px solid #2b2d31;
+            border-bottom: 1px solid #3a3d44;
             background: #313338;
-            box-shadow: 0 1px 0 rgba(0, 0, 0, 0.2);
+            box-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);
             min-height: 48px;
             flex-shrink: 0;
             gap: 12px;
@@ -282,10 +282,11 @@
             align-items: center;
             gap: 8px;
             min-width: 0;
+            overflow: hidden;
         }
         
         .channel-info .channel-icon {
-            color: #949ba4;
+            color: #b9c0c9;
             font-weight: 400;
         }
         
@@ -294,16 +295,19 @@
             font-size: 16px;
             color: #dbdee1;
             letter-spacing: 0.2px;
+            flex-shrink: 0;
         }
         
         .channel-topic {
-            color: #949ba4;
+            color: #b9c0c9;
             font-size: 14px;
             font-weight: 400;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            max-width: 300px;
+            max-width: none;
+            flex: 1 1 auto;
+            min-width: 0;
         }
         
         .top-controls {
@@ -327,7 +331,7 @@
         }
         
         .top-controls button:hover {
-            background: #2b2d31;
+            background: #3a3d44;
             color: #dbdee1;
         }
         
@@ -336,7 +340,7 @@
         }
         
         #clearButton:hover {
-            background: #2b2d31;
+            background: #3a3d44;
             color: #f23f42;
         }
         
@@ -386,7 +390,7 @@
         }
         
         .message-container:hover {
-            background: rgba(255, 255, 255, 0.03);
+            background: rgba(255, 255, 255, 0.06);
         }
         
         .message-container.sent {
@@ -488,7 +492,7 @@
             display: flex;
             align-items: flex-end;
             gap: 8px;
-            background: #2b2d31;
+            background: #3a3d44;
             border-radius: 8px;
             padding: 4px 4px 4px 16px;
             border: 2px solid transparent;
@@ -509,7 +513,7 @@
         .input-actions button {
             background: transparent;
             border: none;
-            color: #949ba4;
+            color: #b9c0c9;
             /* cursor: pointer; removed */
             padding: 4px 6px;
             border-radius: 4px;
@@ -539,7 +543,7 @@
         }
         
         #messageInput::placeholder {
-            color: #949ba4;
+            color: #b9c0c9;
         }
         
         #sendButton {
@@ -579,7 +583,7 @@
         .typing-indicator .typing-dots span {
             width: 6px;
             height: 6px;
-            background: #949ba4;
+            background: #b9c0c9;
             border-radius: 50%;
             animation: typingBounce 1.4s infinite;
         }
@@ -659,28 +663,28 @@
             height: 12px;
             background: #23a55a;
             border-radius: 50%;
-            border: 2px solid #1e1f22;
+            border: 2px solid #26292f;
         }
         
         /* .persona .status-ring.offline removed - all green now */
         
         .persona.add-persona {
-            background: #2b2d31 !important;
-            border: 2px dashed #4e5058;
+            background: #3a3d44 !important;
+            border: 2px dashed #8a919a;
             font-size: 20px;
-            color: #949ba4;
+            color: #b9c0c9;
             text-shadow: none;
         }
         
         .persona.add-persona:hover {
             border-color: #5865f2;
             color: #dbdee1;
-            background: #2b2d31 !important;
+            background: #3a3d44 !important;
         }
         
         .persona-name {
             font-size: 10px;
-            color: #949ba4;
+            color: #b9c0c9;
             text-align: center;
             max-width: 44px;
             overflow: hidden;
@@ -710,7 +714,7 @@
         }
         
         .modal-content {
-            background: #2b2d31;
+            background: #3a3d44;
             padding: 24px;
             border-radius: 8px;
             width: 440px;
@@ -750,7 +754,7 @@
             flex-shrink: 0;
             position: sticky;
             bottom: 0;
-            background: #2b2d31;
+            background: #3a3d44;
             padding-top: 8px;
         }
 
@@ -762,7 +766,7 @@
         .modal[style*="display: flex"] .modal-buttons {
             position: sticky;
             bottom: 0;
-            background: #2b2d31;
+            background: #3a3d44;
             padding-top: 8px;
         }
         @media (max-height: 600px) {
@@ -797,7 +801,7 @@
         }
         
         .modal-content p {
-            color: #949ba4;
+            color: #b9c0c9;
             font-size: 15px;
             line-height: 1.5;
             margin: 8px 0;
@@ -807,7 +811,7 @@
             width: 100%;
             padding: 10px 12px;
             margin: 4px 0 8px 0;
-            background: #1e1f22;
+            background: #26292f;
             color: #dbdee1;
             border: 2px solid transparent;
             border-radius: 4px;
@@ -823,7 +827,7 @@
         }
         
         .modal input::placeholder {
-            color: #4e5058;
+            color: #8a919a;
         }
         
         .modal-buttons {
@@ -857,11 +861,11 @@
         
         .modal-buttons .btn-secondary {
             background: transparent;
-            color: #949ba4;
+            color: #b9c0c9;
         }
         
         .modal-buttons .btn-secondary:hover {
-            background: #1e1f22;
+            background: #26292f;
             color: #dbdee1;
         }
         
@@ -882,7 +886,7 @@
             border-radius: 6px;
             margin: 8px 0;
             cursor: crosshair;
-            border: 2px solid #1e1f22;
+            border: 2px solid #26292f;
             background: linear-gradient(to right, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000);
             position: relative;
             overflow: hidden;
@@ -904,7 +908,7 @@
             height: 48px;
             border-radius: 50%;
             margin: 0;
-            border: 2px solid #1e1f22;
+            border: 2px solid #26292f;
             flex-shrink: 0;
             transition: background 0.1s ease;
         }
@@ -927,7 +931,7 @@
            UTILITY
            ============================================ */
         .received [href^="http"] {
-            color: #8ab4f8;
+            color: #9dc0ff;
             text-decoration: none;
         }
         
@@ -938,7 +942,7 @@
         
         .spoiler {
             color: transparent;
-            background: #2b2d31;
+            background: #3a3d44;
             border-radius: 3px;
             padding: 0 2px;
             transition: color 0.2s ease, background 0.2s ease;
@@ -982,7 +986,7 @@
             }
             
             .channel-topic {
-                max-width: 100px;
+                max-width: none;
             }
             
             .top-controls button {
@@ -1123,8 +1127,8 @@
             margin-left: -24px;
             margin-right: -24px;
             padding: 12px 24px 16px 24px;
-            background: #2b2d31;
-            border-top: 1px solid #1e1f22;
+            background: #3a3d44;
+            border-top: 1px solid #26292f;
             display: flex;
             justify-content: flex-end;
             gap: 8px;
@@ -1153,12 +1157,12 @@
         .modal-content .band + .band {
             margin-top: 12px;
             padding-top: 12px;
-            border-top: 1px solid #1e1f22;
+            border-top: 1px solid #26292f;
         }
         .modal-content .band.band-common-bottom {
             margin-top: 16px;
             padding-top: 12px;
-            border-top: 1px solid #1e1f22;
+            border-top: 1px solid #26292f;
         }
         /* data-empty rule removed: visibility now inline */
 
@@ -1186,8 +1190,8 @@
             bottom: 0 !important;
             margin-bottom: 0 !important;
             padding: 12px 24px 16px 24px !important;
-            background: #2b2d31 !important;
-            border-top: 1px solid #1e1f22 !important;
+            background: #3a3d44 !important;
+            border-top: 1px solid #26292f !important;
             z-index: 3 !important;
         }
         .modal-content {
@@ -1209,6 +1213,35 @@
         .sidebar.open {
             transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
         }
+
+    
+        /* ============================================
+           surface-contrast pass 2
+           sidebar < main < top-bar < input box
+           ============================================ */
+        .app-container          { background: #2f3136 !important; }
+        .main-content           { background: #2f3136 !important; }
+        #chatMessages           { background: #2f3136 !important; }
+        .top-bar                { background: #36393f !important;
+                                  border-bottom: 1px solid #4a4d55 !important;
+                                  box-shadow: 0 1px 0 rgba(0,0,0,.45) !important; }
+        .sidebar                { background: #1e2124 !important; }
+        .server-header          { background: #1e2124 !important;
+                                  border-bottom-color: #4a4d55 !important; }
+        .input-container        { background: #40444b !important; }
+        .modal-content          { background: #40444b !important; }
+        .modal input,
+        .modal textarea,
+        #botResponsesText,
+        #speakerScriptText      { background: #2b2d31 !important; }
+        .modal-buttons          { background: #40444b !important;
+                                  border-top: 1px solid #2b2d31 !important; }
+        .chat-item:hover,
+        .chat-item.active       { background: #2a2d33 !important; }
+        .chat-item:hover .chat-name,
+        .chat-item.active .chat-name { color: #ffffff !important; }
+        .chat-action-btn        { color: #b9c0c9 !important; }
+        .persona.add-persona    { background: #2b2d31 !important; }
 
     </style>
 </head>
@@ -1245,7 +1278,6 @@
                 <button class="menu-toggle" id="menuToggle">☰</button>
                 
                 <div class="channel-info">
-                    <span id="currentChatName"></span>
                     <span class="channel-topic" id="channelTopic"></span>
                 </div>
                 
@@ -1266,7 +1298,6 @@
                 <div class="input-container">
                     
                     <textarea id="messageInput" placeholder="" rows="1"></textarea>
-                    <button id="sendButton">Send</button>
                 </div>
                 
                 <!-- Personas -->
@@ -1286,15 +1317,15 @@
             <input type="text" id="personaSymbol" placeholder="Symbol (1-2 chars)" class="symbol-input" />
 
             <div id="personaTypeRow" style="margin:10px 0;">
-                <label style="color:#949ba4; font-size:13px; display:block; margin-bottom:4px;">Type</label>
-                <select id="personaType" style="width:100%; padding:8px 10px; background:#1e1f22; color:#dbdee1; border:2px solid transparent; border-radius:4px; font-size:14px; font-family:inherit; outline:none;">
+                <label style="color:#b9c0c9; font-size:13px; display:block; margin-bottom:4px;">Type</label>
+                <select id="personaType" style="width:100%; padding:8px 10px; background:#26292f; color:#dbdee1; border:2px solid transparent; border-radius:4px; font-size:14px; font-family:inherit; outline:none;">
                     <option value="ordinary">Ordinary</option>
                     <option value="bot">Bot (randomized responses)</option>
                     <option value="speaker">Speaker (linear script)</option>
                 </select>
             </div>
 
-            <div style="text-align:center; margin:10px 0; color:#949ba4; font-size:14px;">
+            <div style="text-align:center; margin:10px 0; color:#b9c0c9; font-size:14px;">
                 Click the palette to choose color
             </div>
 
@@ -1305,29 +1336,29 @@
 
             <div class="band band-specific" id="bandSpecific" data-empty="1">
             <div id="botFields" style="display:none;">
-                <label style="color:#949ba4; font-size:13px; display:block; margin-bottom:4px;">Responses (one per line)</label>
-                <textarea id="botResponsesText" style="width:100%; height:140px; background:#1e1f22; color:#dbdee1; border:2px solid transparent; border-radius:4px; padding:10px; font-family:inherit; font-size:14px; resize:vertical; outline:none;"></textarea>
-                <div style="margin-top:6px; color:#949ba4; font-size:12px;">Responses: <span id="botResponseCount">0</span></div>
+                <label style="color:#b9c0c9; font-size:13px; display:block; margin-bottom:4px;">Responses (one per line)</label>
+                <textarea id="botResponsesText" style="width:100%; height:140px; background:#26292f; color:#dbdee1; border:2px solid transparent; border-radius:4px; padding:10px; font-family:inherit; font-size:14px; resize:vertical; outline:none;"></textarea>
+                <div style="margin-top:6px; color:#b9c0c9; font-size:12px;">Responses: <span id="botResponseCount">0</span></div>
             </div>
 
             <div id="speakerFields" style="display:none;">
-                <label style="color:#949ba4; font-size:13px; display:block; margin-bottom:4px;">Script (blank line = new block)</label>
-                <textarea id="speakerScriptText" style="width:100%; height:140px; background:#1e1f22; color:#dbdee1; border:2px solid transparent; border-radius:4px; padding:10px; font-family:inherit; font-size:14px; resize:vertical; outline:none;"></textarea>
-                <div style="margin-top:6px; color:#949ba4; font-size:12px;">Blocks: <span id="speakerBlockCount">0</span></div>
+                <label style="color:#b9c0c9; font-size:13px; display:block; margin-bottom:4px;">Script (blank line = new block)</label>
+                <textarea id="speakerScriptText" style="width:100%; height:140px; background:#26292f; color:#dbdee1; border:2px solid transparent; border-radius:4px; padding:10px; font-family:inherit; font-size:14px; resize:vertical; outline:none;"></textarea>
+                <div style="margin-top:6px; color:#b9c0c9; font-size:12px;">Blocks: <span id="speakerBlockCount">0</span></div>
                 <div style="display:flex; gap:4px; margin-top:8px; flex-wrap:wrap;">
-                    <button type="button" class="chat-action-btn" id="spkLow" style="background:#1e1f22; padding:4px 10px; color:#dbdee1; border-radius:4px;">low</button>
-                    <button type="button" class="chat-action-btn" id="spkPunct" style="background:#1e1f22; padding:4px 10px; color:#dbdee1; border-radius:4px;">punct</button>
-                    <button type="button" class="chat-action-btn" id="spkSent" style="background:#1e1f22; padding:4px 10px; color:#dbdee1; border-radius:4px;">sent</button>
-                    <span style="color:#4e5058;">|</span>
-                    <input type="number" id="spkChunkN" value="3" min="1" style="width:44px; padding:3px 6px; background:#1e1f22; color:#dbdee1; border:none; border-radius:4px; font-size:12px; text-align:center;">
-                    <button type="button" class="chat-action-btn" id="spkChunk" style="background:#1e1f22; padding:4px 10px; color:#dbdee1; border-radius:4px;">chunk</button>
+                    <button type="button" class="chat-action-btn" id="spkLow" style="background:#26292f; padding:4px 10px; color:#dbdee1; border-radius:4px;">low</button>
+                    <button type="button" class="chat-action-btn" id="spkPunct" style="background:#26292f; padding:4px 10px; color:#dbdee1; border-radius:4px;">punct</button>
+                    <button type="button" class="chat-action-btn" id="spkSent" style="background:#26292f; padding:4px 10px; color:#dbdee1; border-radius:4px;">sent</button>
+                    <span style="color:#8a919a;">|</span>
+                    <input type="number" id="spkChunkN" value="3" min="1" style="width:44px; padding:3px 6px; background:#26292f; color:#dbdee1; border:none; border-radius:4px; font-size:12px; text-align:center;">
+                    <button type="button" class="chat-action-btn" id="spkChunk" style="background:#26292f; padding:4px 10px; color:#dbdee1; border-radius:4px;">chunk</button>
                 </div>
                 <div style="display:flex; align-items:center; gap:8px; margin-top:10px;">
                     <button type="button" id="spkPlay" style="background:#5865f2; color:#fff; border:none; border-radius:4px; padding:6px 14px; font-weight:600; font-size:13px;">▶ Play</button>
                     <input type="range" id="spkSpeed" min="50" max="700" step="25" value="250" style="flex:1;">
-                    <span id="spkSpeedLabel" style="color:#949ba4; font-size:12px; min-width:60px;">250 CPM</span>
+                    <span id="spkSpeedLabel" style="color:#b9c0c9; font-size:12px; min-width:60px;">250 CPM</span>
                 </div>
-                <div style="margin-top:6px; color:#949ba4; font-size:12px;">Next block: <span id="spkPos">0</span>/<span id="spkTotal">0</span></div>
+                <div style="margin-top:6px; color:#b9c0c9; font-size:12px;">Next block: <span id="spkPos">0</span>/<span id="spkTotal">0</span></div>
             </div>
             </div>
 
@@ -1374,7 +1405,6 @@
         // ----- DOM Elements -----
         const chatMessages = document.getElementById("chatMessages");
         const messageInput = document.getElementById("messageInput");
-        const sendButton = document.getElementById("sendButton");
         const clearButton = document.getElementById("clearButton");
         // exportButton removed
         const personasContainer = document.getElementById("personasContainer");
@@ -1619,7 +1649,7 @@
             const currentChat = chats.find((chat) => chat.id === chatId);
             if (currentChat) {
                 currentChatName.textContent = currentChat.name;
-                channelTopic.textContent = `— ${personas.length} members`;
+                updateChannelTopic();
             }
             
             loadCurrentChat();
@@ -1754,7 +1784,7 @@
         localStorage.removeItem("mirrorChat");
     }
 
-    channelTopic.textContent = `— ${personas.length} members`;
+    updateChannelTopic();
     renderPersonas();
     renderChat();
 }
@@ -1908,7 +1938,7 @@
     renderPersonas();
     renderChat();
     personaModal.style.display = "none";
-    channelTopic.textContent = `— ${personas.length} members`;
+    updateChannelTopic();
 }
 
         
@@ -1937,7 +1967,7 @@
             setActivePersona(personas[0].id);
         }
         renderChat();
-        channelTopic.textContent = `\u2014 ${personas.length} members`;
+        updateChannelTopic();
     }
     personaModal.style.display = "none";
 }
@@ -2242,9 +2272,16 @@
         function closeSidebar() {
             sidebar.classList.remove("open");
         }
+
+        function updateChannelTopic() {
+            const chats = JSON.parse(localStorage.getItem("mirrorChats") || "[]");
+            const chat = chats.find(c => c.id === currentChatId);
+            const name = chat ? chat.name : "";
+            channelTopic.textContent = "# " + name + " \u00b7 " + personas.length + " members";
+        }
+
         
         // ----- Event Listeners -----
-        sendButton.addEventListener("click", sendMessage);
         
         messageInput.addEventListener("keydown", (e) => {
             if (e.key === "Enter" && !e.shiftKey) {
