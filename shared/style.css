@@ -22,7 +22,6 @@
   --border-end-start-radius:   var(--bubble-border-radius-medium);
 
   position: relative;
-  z-index: 1;
   margin: 0 0 var(--bubble-margin) 0;
   user-select: none;
   display: flex;
@@ -60,7 +59,6 @@
   border-end-end-radius:     var(--border-end-end-radius);
   box-shadow: 0 1px 2px 0 rgba(16, 35, 47, .15);
   position: relative;
-  z-index: 2;
   background-color: var(--message-background-color);
 }
 
@@ -70,7 +68,8 @@
   max-width: 100%;
   color: var(--primary-text-color);
   line-height: var(--messages-line-height);
-  word-break: break-word;
+  word-break: normal;
+  overflow-wrap: anywhere;
   white-space: pre-wrap;
 }
 
@@ -91,6 +90,8 @@
   padding: 2px 4px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, .6);
   pointer-events: none;
+  z-index: 3;
+
 }
 .msg.is-in.reacted::after { right: auto; left: 4px; }
 

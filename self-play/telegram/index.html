@@ -33,6 +33,7 @@
                 <div class="msgs" id="msgs"></div>
                 <div class="input-area">
                     <textarea id="ownInput" placeholder="Message as Alex…" rows="1"></textarea>
+                    <button class="send-btn" id="sendBtn" title="Send">➤</button>
                     
                 </div>
             </div>
@@ -61,7 +62,6 @@
             <div class="name-grid">
 
                 <div class="name-col">
-                    <span class="name-col-title" id="mOwnTitle">Alex</span>
                     <label>Emoji</label>
                     <input type="text" id="mOwnEmoji" value="🙂" maxlength="2">
                     <label>Name</label>
@@ -84,7 +84,6 @@
                 </div>
 
                 <div class="name-col">
-                    <span class="name-col-title" id="mOtherTitle">Liza</span>
                     <label>Emoji</label>
                     <input type="text" id="mOtherEmoji" value="👤" maxlength="2">
                     <label>Name</label>
@@ -693,6 +692,16 @@
         ownInput.addEventListener('keydown', function (e) {
             if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
         });
+        // mobile send button
+        var __sendBtn = document.getElementById('sendBtn');
+        if (__sendBtn) {
+            __sendBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+                handleSend();
+                ownInput.focus();
+            });
+        }
+
 
         // === BOT MODE v1.2 ===
 
@@ -1091,7 +1100,7 @@
             if (_av) _av.addEventListener('click', function () { togglePerspective(); });
             // Alt+M switches perspective
             document.addEventListener('keydown', function (e) {
-                if (e.altKey && (e.key === 'm' || e.key === 'M')) {
+                if (e.altKey && e.code === 'KeyM') {
                     e.preventDefault();
                     togglePerspective();
                 }

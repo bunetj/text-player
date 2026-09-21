@@ -34,6 +34,7 @@
                 <div class="msgs" id="msgs"></div>
                 <div class="input-area">
                     <textarea id="ownInput" placeholder="Type message..." rows="1"></textarea>
+                    <button class="send-btn" id="sendBtn" title="Send">➤</button>
                     
                 </div>
             </div>
@@ -324,6 +325,16 @@
                 handleSend();
             }
         });
+        // mobile send button
+        var __sendBtn = document.getElementById('sendBtn');
+        if (__sendBtn) {
+            __sendBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+                handleSend();
+                ownInput.focus();
+            });
+        }
+
 
         // AUTO-PLAY
         var autoPlay = {
