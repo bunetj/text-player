@@ -39,3 +39,13 @@ function bubbleMarkSides(container, authorPredicate) {
   }
   closeRun(nodes.length - 1);
 }
+
+
+// refreshBubblesFor(container, perspective)
+//   perspective: 'own' | 'other' — the current "me".
+//   Wraps bubbleMarkSides with the standard author-vs-perspective predicate.
+function refreshBubblesFor(container, perspective) {
+    bubbleMarkSides(container, function (n) {
+        return n.getAttribute('data-author') === perspective ? 'a' : 'b';
+    });
+}

@@ -57,10 +57,11 @@ function exportChatShared(msgsEl, opts, nameFor) {
         var text = m.textContent.trim();
         if (!text) continue;
 
+        var heart = isReacted ? '\n❤' : '';
         if (singleSpeaker) {
-            parts.push(text);
+            parts.push(text + heart);
         } else {
-            parts.push('[' + nameFor(isOwn) + ']\n' + text);
+            parts.push('[' + nameFor(isOwn) + ']\n' + text + heart);
         }
     }
 

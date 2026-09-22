@@ -162,3 +162,17 @@ function applyLow(text, settings) {
     if (settings.oneLine) result = result.replace(/\s+/g, ' ').trim();
     return result;
 }
+
+
+function joinBySeparator(arr, sep) {
+    return (arr || []).join(sep);
+}
+
+
+// getDelay(text, wpm) — milliseconds to wait before showing a message.
+function getDelay(text, wpm) {
+    var chars = (text || '').length || 1;
+    var ms = Math.round((60 / (wpm || 200)) * (chars / 5) * 1000);
+    if (!isFinite(ms) || ms < 100) ms = 800;
+    return ms;
+}

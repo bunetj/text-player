@@ -31,20 +31,6 @@ h1 {
 }
 h1:first-child { margin-top: 0; }
 h1:last-child { margin-bottom: 0; }
-h2 {
-    margin: 40px auto 10px auto;
-}
-.desc {
-    color: #6e6e6e;
-    font-size: 13px;
-    margin: 12px 0 22px 0;
-}
-.row {
-    display: flexbox;
-    justify-content: center;
-    gap: 8px;
-}
-.row + .row { margin-top: 24px; }
 .pad {
     display: BLOCK;
     align-items: center;
@@ -57,46 +43,23 @@ h2 {
     width: fit-content;
     margin: 12px auto;
 }
-.pad:hover {
-    color: #e8edf2; }
+.pad:hover { color: #e8edf2; }
 .pad-emoji { font-size: 14px; line-height: 1; margin: 0 20px; }
-hr {border:0;border-top:1px solid #444; margin: 24px 0;}
 </style>
+<link rel="stylesheet" href="https://unpkg.com/@exis9/jdecked-twemoji@17.0.3/twemoji.min.css" />
 </head>
 <body>
-<div class="hub">
+<div class="hub twemoji">
+
 <h1>text player</h1>
-<div class="desc"></div>
 
-<h2>👓 CHEATREAD 👓</h2>
-
-<div class="desc">display LONG TEXTS LIKE they're CHATS or SUBTITLES</div>
-
-<div class="row">
-<a class="pad" href="cheatread/formatter/index.html"><span class="pad-emoji">✏️</span>formatter<span class="pad-emoji">✏️</span></a>
-</div>
-<hr>
-<div class="row">
-<a class="pad" href="cheatread/telegram/index.html"><span class="pad-emoji">💬</span>TELEGRAM READER<span class="pad-emoji">👓</span></a>
-<a class="pad" href="cheatread/subtitles/index.html"><span class="pad-emoji">🎬</span>SUBTITLES READER<span class="pad-emoji">👓</span></a>
-</div>
-<hr>
-<div class="row">
-<a class="pad" href="cheatread/led/index.html"><span class="pad-emoji">💡</span>led scroller<span class="pad-emoji">👓</span></a>
-</div>
-
-<H2>👥 SELF-PLAY 👥</H2>
-<DIV CLASS="desc">ROLE-PLAY OR CHAT TO YOURSELF.</DIV>
-
-<div class="row">
-
-<a class="pad" href="self-play/telegram/index.html"><span class="pad-emoji">💬</span>TELEGRAM ROLEPLAY<span class="pad-emoji">👥</span></a>
-<a class="pad" href="self-play/discord/index.html"><span class="pad-emoji">👾</span>DISCORD ROLEPLAY<span class="pad-emoji">👥👥👥</span></a>
-
-</div>
+<a class="pad" href="telegram/index.html"><span class="pad-emoji">💬</span>telegram<span class="pad-emoji">⭐</span></a>
+<a class="pad" href="subtitles/index.html"><span class="pad-emoji">🎞</span>subtitles<span class="pad-emoji">🙉</span></a>
+<a class="pad" href="formatter/index.html"><span class="pad-emoji">🖊</span>formatter<span class="pad-emoji">📜</span></a>
+<a class="pad" href="discord/index.html"><span class="pad-emoji">👾</span>discord<span class="pad-emoji">👥👥👥</span></a>
+<a class="pad" href="led/index.html"><span class="pad-emoji">💡</span>led scroller<span class="pad-emoji">🕶</span></a>
 
 <h1>text player</h1>
 
 </div>
-
 </body></html>

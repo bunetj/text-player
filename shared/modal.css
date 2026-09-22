@@ -30,7 +30,7 @@
 .modal-box .btn-row { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
 .modal-box .btn-row button { padding: 6px 16px; border: none; border-radius: 20px; cursor: pointer; font-size: 13px; }
 .modal-box .btn-cancel { background: #2a2a2a !important; color: #9a9a9a !important; }
-.modal-box .btn-cancel:hover { background: #333 !important; color: #fff !important; }
+.modal-box .btn-cancel:hover { background: #333 !important; }
 .modal-box .btn-save { background: #2b5278 !important; color: #ffffff !important; }
 .modal-box .btn-save:hover { background: #356a9a !important; }
 .modal-box .color-picker-row { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }

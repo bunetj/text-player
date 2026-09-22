@@ -1,6 +1,17 @@
 // shared/prep.js — shared Prep popup and chunking.
 // Uses shared/modal.css classes so all apps look the same.
 
+function __lowState(key, def) {
+    try {
+        var v = localStorage.getItem('low_cb_' + key);
+        if (v === null) return def;
+        return v === '1';
+    } catch (e) { return def; }
+}
+function __lowSave(key, val) {
+    try { localStorage.setItem('low_cb_' + key, val ? '1' : '0'); } catch (e) {}
+}
+
 function showLowPopup(inputEl, joinWith) {
     var existing = document.getElementById('__lowPopup');
     if (existing) existing.remove();
@@ -13,9 +24,10 @@ function showLowPopup(inputEl, joinWith) {
     box.className = 'modal-box';
     box.innerHTML =
         '<h3>Chat style</h3>' +
-        '<label><input type="checkbox" id="lowLower" checked> Lowercase</label>' +
-        '<label><input type="checkbox" id="lowNoPunct"> Remove punctuation</label>' +
-        '<label><input type="checkbox" id="lowOneLine"> One line</label>' +
+        '<label><input type="checkbox" id="lowLower"' + (__lowState('lower', true) ? ' checked' : '') + '> Lowercase</label>' +
+        '<label><input type="checkbox" id="lowNoPunct"' + (__lowState('noPunct', false) ? ' checked' : '') + '> Remove punctuation</label>' +
+        '<label><input type="checkbox" id="lowLines" checked> Split by lines</label>' +
+                '<label><input type="checkbox" id="lowOneLine"' + (__lowState('oneLine', false) ? ' checked' : '') + '> One line</label>' +
         '<div class="btn-row">' +
         '   <button class="btn-cancel" id="lowCancel">Cancel</button>' +
         '   <button class="btn-save" id="lowApply">Apply</button>' +
@@ -30,12 +42,21 @@ function showLowPopup(inputEl, joinWith) {
             lowercase: document.getElementById('lowLower').checked,
             noPunct: document.getElementById('lowNoPunct').checked,
             oneLine: document.getElementById('lowOneLine').checked,
+            lines: document.getElementById('lowLines').checked,
         };
+        __lowSave('lower', settings.lowercase);
+        __lowSave('noPunct', settings.noPunct);
+        __lowSave('lines', settings.lines);
+        __lowSave('oneLine', settings.oneLine);
         var raw = inputEl.value;
-        var blocks = splitByBlankLines(raw);
-        var transformed = blocks.map(function (b) { return applyLow(b, settings); })
-                                .filter(function (b) { return b.trim(); });
-        inputEl.value = transformed.join(joinWith);
+
+        if (settings.lines) {
+            var linesIn = raw.split(/\n+/).map(function (s) { return s.trim(); })
+                             .filter(function (s) { return s; });
+            raw = linesIn.join('\n---\n');
+        }
+
+        inputEl.value = applyLow(raw, settings);
         close();
     }
 
