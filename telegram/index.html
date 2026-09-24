@@ -241,6 +241,7 @@
 <script src="../shared/persist.js"></script>
 <script src="../shared/text.js"></script>
 <script src="../shared/prep.js"></script>
+<script src="../shared/pdf.js"></script>
 <script>
         // ============================================================
         // RP CHAT — two people, one perspective at a time
@@ -542,6 +543,7 @@ function sendBotMessage() {
                     '  /chat line      collapse into one message',
                     '  /chat sent      split on periods',
                     '  /chat chunk N   split into messages of N words each',
+                    '  /chat pdf       unwrap PDF-paste line breaks',
                     '',
                     'play',
                     '  /play       play the loaded script; replay the chat',
@@ -721,6 +723,21 @@ function sendBotMessage() {
                     }
 
                     // ------------------------------------------------
+                    // /chat pdf
+                    // Whole-script transform: no block splitting.
+                    // ------------------------------------------------
+                    if (op === 'pdf') {
+                        if (typeof formatAsPdf !== 'function') {
+                            __ph('chat pdf: unavailable');
+                            return;
+                        }
+                        state.script = formatAsPdf(state.script || '');
+                        chatIndex++;
+                        runNextChatOp();
+                        return;
+                    }
+
+                    // ------------------------------------------------
                     // /chat punct
                     //
                     // This is the only asynchronous operation.
@@ -799,7 +816,7 @@ function sendBotMessage() {
                 }
 
                 if (!chatOps.length) {
-                    __ph('chat: low | punct | rem | lines | line | sent | chunk N');
+                    __ph('chat: low | punct | rem | lines | line | sent | chunk N | pdf');
                     return true;
                 }
 

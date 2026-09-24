@@ -139,6 +139,7 @@
     <script src="../shared/text.js"></script>
     <script src="../shared/prep.js"></script>
     <script src="../shared/store.js"></script>
+<script src="../shared/pdf.js"></script>
     <script>
         // ============================================================
         // FORMATTER — text transformation only, no chat / no preview.
@@ -251,6 +252,7 @@
                 '   <button class="menu-btn" id="lowBtn">low</button>' +
                 '   <button class="menu-btn" id="punctBtn">punct</button>' +
                 '   <button class="menu-btn" id="sentBtn">sentences</button>' +
+                '   <button class="menu-btn" id="pdfBtn">pdf</button>' +
                 '</div>' +
                 '<div class="menu-section">' +
                 '   <span class="menu-label">CHUNK words:</span>' +
@@ -326,6 +328,12 @@
                     }
                 }
                 if (out.length) input.value = rejoin(out);
+                saveState();
+            };
+
+            document.getElementById('pdfBtn').onclick = function () {
+                if (typeof formatAsPdf !== 'function') return;
+                input.value = formatAsPdf(input.value);
                 saveState();
             };
 

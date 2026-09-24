@@ -1243,7 +1243,7 @@
         /* .chat-action-btn: keep the light-blue/grey tone for sidebar action
            buttons, but NOT for the speaker-editor prep buttons
            (they set their own color inline). */
-        .chat-action-btn:not(#spkLow):not(#spkPunct):not(#spkSent):not(#spkChunk):not(#spkPlay) {
+        .chat-action-btn:not(#spkLow):not(#spkPunct):not(#spkSent):not(#spkPdf):not(#spkChunk):not(#spkPlay) {
             color: #b9c0c9 !important;
         }
         .persona.add-persona    { background: #2b2d31 !important; }
@@ -1253,6 +1253,7 @@
         #spkLow,
         #spkPunct,
         #spkSent,
+        #spkPdf,
         #spkChunk {
             cursor: pointer;
             transition: background 0.12s ease, color 0.12s ease;
@@ -1260,6 +1261,7 @@
         #spkLow:hover,
         #spkPunct:hover,
         #spkSent:hover,
+        #spkPdf:hover,
         #spkChunk:hover {
             background: #3a3d44 !important;
             color: #ffffff !important;
@@ -1267,6 +1269,7 @@
         #spkLow:active,
         #spkPunct:active,
         #spkSent:active,
+        #spkPdf:active,
         #spkChunk:active {
             background: #232428 !important;
             color: #ffffff !important;
@@ -1382,6 +1385,7 @@
                     <button type="button" class="chat-action-btn" id="spkLow" style="background:#26292f; padding:4px 10px; color:#dbdee1; border-radius:4px;">low</button>
                     <button type="button" class="chat-action-btn" id="spkPunct" style="background:#26292f; padding:4px 10px; color:#dbdee1; border-radius:4px;">punct</button>
                     <button type="button" class="chat-action-btn" id="spkSent" style="background:#26292f; padding:4px 10px; color:#dbdee1; border-radius:4px;">sent</button>
+                    <button type="button" class="chat-action-btn" id="spkPdf" style="background:#26292f; padding:4px 10px; color:#dbdee1; border-radius:4px;">pdf</button>
                     <span style="color:#8a919a;">|</span>
                     <input type="number" id="spkChunkN" value="3" min="1" style="width:44px; padding:3px 6px; background:#26292f; color:#dbdee1; border:none; border-radius:4px; font-size:12px; text-align:center;">
                     <button type="button" class="chat-action-btn" id="spkChunk" style="background:#26292f; padding:4px 10px; color:#dbdee1; border-radius:4px;">chunk</button>
@@ -1434,6 +1438,7 @@
 <script src="../shared/persist.js"></script>
     <script src="../shared/text.js"></script>
 <script src="../shared/speed.js"></script>
+<script src="../shared/pdf.js"></script>
     <script>
         // ============================================
         // JAVASCRIPT - Complete App Logic
@@ -2469,6 +2474,8 @@
         if (spkPunct) spkPunct.addEventListener("click", () => applySpeakerPrep("punct"));
         const spkSent = document.getElementById("spkSent");
         if (spkSent) spkSent.addEventListener("click", () => applySpeakerPrep("sent"));
+        const spkPdf = document.getElementById("spkPdf");
+        if (spkPdf) spkPdf.addEventListener("click", () => applySpeakerPrep("pdf"));
         const spkChunk = document.getElementById("spkChunk");
         if (spkChunk) spkChunk.addEventListener("click", () => applySpeakerPrep("chunk"));
         const spkPlay = document.getElementById("spkPlay");
@@ -2552,6 +2559,10 @@ function applySpeakerPrep(mode) {
             }
         }
         raw = out3.join("\n\n");
+    } else if (mode === "pdf") {
+        if (typeof formatAsPdf === 'function') {
+            raw = formatAsPdf(raw);
+        }
     }
 
     el.value = raw;

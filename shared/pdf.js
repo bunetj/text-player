@@ -31,6 +31,10 @@
         //    running the function twice is a no-op on already-formatted text.
         text = text.replace(/(?<!\n)\n(?!\n)(?!\p{Lu})/gu, ' ');
 
+        // 3) collapse runs of blank lines: 3+ newlines in a row -> 2.
+        //    (2 newlines = one blank line, which is the separator we want.)
+        text = text.replace(/\n{3,}/g, '\n\n');
+
         return text;
     }
 

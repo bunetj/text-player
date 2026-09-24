@@ -449,6 +449,7 @@
 <script src="../shared/prep.js"></script>
 <script src="../shared/store.js"></script>
 <script src="../shared/speed.js"></script>
+<script src="../shared/pdf.js"></script>
     <script>
         // ============================================================
         // SUBTITLE MFV - Minimal Functional Version
@@ -783,6 +784,7 @@
                 '   <button class="menu-btn" id="lowBtn">low</button>' +
                 '   <button class="menu-btn" id="punctBtn">punct</button>' +
                 '   <button class="menu-btn" id="sentBtn">sentences</button>' +
+                '   <button class="menu-btn" id="pdfBtn">pdf</button>' +
                 '</div>' +
                 '<div class="menu-section">' +
                 '   <span class="menu-label">CHUNK words:</span>' +
@@ -855,6 +857,16 @@
                     state.idx = 0;
                     render();
                 }
+            };
+            document.getElementById('pdfBtn').onclick = function () {
+                stopPlayOnControl();
+                if (typeof formatAsPdf !== 'function') return;
+                input.value = formatAsPdf(input.value);
+                state.blocks = splitBlocks(input.value);
+                state.hasContent = state.blocks.length > 0;
+                state.idx = 0;
+                render();
+                saveState();
             };
             document.getElementById('applyBtn').onclick = function () {
                 stopPlayOnControl();
