@@ -6,11 +6,43 @@
     var HAS_SERVER = null;
     var PING_PROMISE = null;
 
+    function isLocal() {
+        var h = location.hostname;
+        return h === 'localhost' || h === '127.0.0.1'
+            || h === '' || h === '0.0.0.0';
+    }
+
     function ping() {
         if (PING_PROMISE) return PING_PROMISE;
+
+        // On GitHub Pages (or any non-local host) there is no server.py.
+        if (!isLocal()) {
+            HAS_SERVER = false;
+            PING_PROMISE = Promise.resolve(false);
+            return PING_PROMISE;
+        }
+
+        // Locally: remember a previous "no server" verdict so a refresh
+        // doesn't re-hit /data/ping.
+        var cached = null;
+        try { cached = localStorage.getItem('__has_server'); } catch (e) {}
+        if (cached === '0') {
+            HAS_SERVER = false;
+            PING_PROMISE = Promise.resolve(false);
+            return PING_PROMISE;
+        }
+
         PING_PROMISE = fetch('/data/ping', { method: 'GET' })
-            .then(function (r) { HAS_SERVER = r.ok; return HAS_SERVER; })
-            .catch(function () { HAS_SERVER = false; return false; });
+            .then(function (r) {
+                HAS_SERVER = r.ok;
+                try { localStorage.setItem('__has_server', r.ok ? '1' : '0'); } catch (e) {}
+                return HAS_SERVER;
+            })
+            .catch(function () {
+                HAS_SERVER = false;
+                try { localStorage.setItem('__has_server', '0'); } catch (e) {}
+                return false;
+            });
         return PING_PROMISE;
     }
 
