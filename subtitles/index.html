@@ -294,9 +294,74 @@
     color: #e8edf2;
 }
 
+
+        /* --- settings panel (⚙ popup, video-player style) --- */
+        .app {
+            position: relative;   /* anchor for the panel */
+        }
+        .settings-panel {
+            position: absolute;
+            right: 8px;
+            bottom: 52px;         /* just above the bottom bar */
+            background: rgba(20, 20, 20, 0.72);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 10px;
+            padding: 10px 12px;
+            display: none;
+            flex-direction: column;
+            gap: 8px;
+            min-width: 230px;
+            max-width: calc(100% - 16px);
+            z-index: 900;
+        }
+        .settings-panel.open { display: flex; }
+        .settings-panel .row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .settings-panel .row-label {
+            font-size: 11px;
+            color: #8e9aa5;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            min-width: 52px;
+        }
+        .settings-panel .menu-btn {
+            color: #c8d1da;
+            padding: 2px 8px;
+            font-size: 13px;
+        }
+        .settings-panel .menu-btn:hover { color: #fff; }
+        .settings-panel .menu-label-display {
+            font-size: 12px;
+            color: #c8d1da;
+            min-width: 44px;
+            text-align: center;
+        }
+        .settings-panel .menu-range {
+            width: 110px;
+            accent-color: #7a7a7a;
+            background: #333;
+            height: 4px;
+            border-radius: 2px;
+        }
+        .bottom-bar .bar-text {
+            position: absolute;
+            left: 6px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 18px;
+            color: #8e9aa5;
+            background: transparent;
+            padding: 6px 10px;
+        }
+        .bottom-bar .bar-text:hover { color: #e8edf2; }
+
 </style>
     <style id="no-radius">
 .app,
+.app *,
 .sub-wrap,
 .sub-text,
 .toolbar,
@@ -304,13 +369,20 @@
 .bottom-bar,
 .bottom-bar .bar-play,
 .bottom-bar .bar-gear,
+.bottom-bar .bar-text,
 .menu-btn,
 .menu-section,
 .menu-range,
 .menu-range::-webkit-slider-thumb,
 .menu-range::-moz-range-thumb,
 .menu-input-label input,
-#wordCountInput {
+#wordCountInput,
+#speedValue,
+.settings-panel,
+.settings-panel *,
+.modal,
+.modal-box,
+.modal-box * {
     border-radius: 0 !important;
 }
 </style>
@@ -338,15 +410,31 @@
         </div>
 
         <div class="bottom-bar">
+            <button class="menu-btn bar-text" id="textBtn" title="Text">📄</button>
             <button class="menu-btn bar-play" id="playBtn">▶</button>
             <button class="menu-btn bar-gear" id="gearBtn">⚙</button>
+        </div>
+
+        <div class="settings-panel" id="settingsPanel">
+            <div class="row">
+                <span class="row-label">Font</span>
+                <button class="menu-btn" id="fontSmall">A−</button>
+                <span class="menu-label-display" id="sizeLabel">20px</span>
+                <button class="menu-btn" id="fontBig">A+</button>
+            </div>
+            <div class="row">
+                <span class="row-label">Speed</span>
+                <input type="number" id="speedValue" value="250" min="50" max="700" step="25"
+                       style="width:56px;padding:3px 6px;background:#333333;border:none;
+                              color:#e8edf2;font-size:12px;text-align:center;font-family:inherit;">
+                <span class="menu-label-display">WPM</span>
+            </div>
         </div>
     </div>
 
     <div class="modal" id="settingsModal">
         <div class="modal-box settings">
-            <h3>Menu</h3>
-            <div class="toolbar" id="toolbar-top"></div>
+            <h3>Text</h3>
             <div class="textbox-area" style="margin-top:8px;">
                 <textarea id="inputText" placeholder="Paste text with blank lines between subtitles"></textarea>
             </div>
@@ -357,8 +445,11 @@
 <script src="../shared/modal.js"></script>
 <script src="../shared/ui.js"></script>
 <script src="../shared/text.js"></script>
+<script src="../shared/font.js"></script>
 <script src="../shared/prep.js"></script>
-<script>
+<script src="../shared/store.js"></script>
+<script src="../shared/speed.js"></script>
+    <script>
         // ============================================================
         // SUBTITLE MFV - Minimal Functional Version
         // ============================================================
@@ -531,21 +622,25 @@
         }
 
         // FONT
-        function applyFontSize() {
-            display.style.fontSize = state.fontSize + 'px';
-            var label = document.getElementById('sizeLabel');
-            if (label) label.textContent = state.fontSize + 'px';
-        }
+        function __applyFontSizeLocal() {
+    applyFontSize(display, state.fontSize);
+}
 
         function fontIncrease() {
             state.fontSize = Math.min(state.fontSize + 2, 60);
-            applyFontSize();
+            __applyFontSizeLocal();
+            __syncSizeLabel();
             saveState();
         }
         function fontDecrease() {
             state.fontSize = Math.max(state.fontSize - 2, 10);
-            applyFontSize();
+            __applyFontSizeLocal();
+            __syncSizeLabel();
             saveState();
+        }
+        function __syncSizeLabel() {
+            var el = document.getElementById('sizeLabel');
+            if (el) el.textContent = state.fontSize + 'px';
         }
 
         // SUBTITLE FUNCTIONS
@@ -557,7 +652,7 @@
             if (state.idx >= state.blocks.length) state.idx = state.blocks.length - 1;
             if (state.idx < 0) state.idx = 0;
             display.textContent = wrapText(state.blocks[state.idx]);
-            applyFontSize();
+            __applyFontSizeLocal();
             saveState();
         }
 
@@ -630,7 +725,7 @@
                     if (idx < remaining.length) {
                         var item = remaining[idx];
                         display.textContent = wrapText(item);
-                        applyFontSize();
+                        __applyFontSizeLocal();
                         self._currentIdx = startIdx + idx;
                         state.idx = self._currentIdx;
                         idx++;
@@ -652,7 +747,7 @@
                 // Start with first message immediately, delay comes from playNext
                 var firstItem = remaining[0];
                 display.textContent = wrapText(firstItem);
-                applyFontSize();
+                __applyFontSizeLocal();
                 self._currentIdx = startIdx;
                 state.idx = startIdx;
                 idx = 1;
@@ -678,22 +773,11 @@
             var top = document.getElementById('toolbar-top');
             var bottom = document.getElementById('toolbar-bottom');
 
-            top.innerHTML =
-                '<div class="menu-section">' +
-                '   <span class="menu-label">FONT</span>' +
-                '   <button class="menu-btn" id="fontSmall">A−</button>' +
-                '   <span class="menu-label-display" id="sizeLabel">20px</span>' +
-                '   <button class="menu-btn" id="fontBig">A+</button>' +
-                '</div>' +
-                '<div class="menu-section">' +
-                '   <span class="menu-label">SPEED</span>' +
-                '   <button class="menu-btn" id="slowerBtn">🐢−</button>' +
-                '   <input type="range" class="menu-range" id="speedSlider" min="50" max="700" step="25" value="250">' +
-                '   <button class="menu-btn" id="fasterBtn">🐇+</button>' +
-                '   <span class="menu-label-display" id="speedValue">250 WPM</span>' +
-                '</div>';
+            // top toolbar: empty (font/speed moved to settings panel)
+            if (top) top.innerHTML = '';
 
-            bottom.innerHTML =
+            // bottom toolbar: PREP + CHUNK only
+            if (bottom) bottom.innerHTML =
                 '<div class="menu-section">' +
                 '   <span class="menu-label">PREP</span>' +
                 '   <button class="menu-btn" id="lowBtn">low</button>' +
@@ -791,48 +875,48 @@
                 render();
             };
 
-            var speedSlider = document.getElementById('speedSlider');
             var speedValue = document.getElementById('speedValue');
-            document.getElementById('slowerBtn').onclick = function () {
-                // Speed change does NOT stop autoplay
-                state.wpm = Math.max(state.wpm - 25, 50);
-                speedSlider.value = state.wpm;
-                speedValue.textContent = state.wpm + ' WPM';
-                saveState();
-            };
-            document.getElementById('fasterBtn').onclick = function () {
-                // Speed change does NOT stop autoplay
-                state.wpm = Math.min(state.wpm + 25, 700);
-                speedSlider.value = state.wpm;
-                speedValue.textContent = state.wpm + ' WPM';
-                saveState();
-            };
-            speedSlider.oninput = function (e) {
-                // Speed change does NOT stop autoplay
-                state.wpm = parseInt(e.target.value);
-                speedValue.textContent = state.wpm + ' WPM';
-                saveState();
-            };
-            speedValue.textContent = state.wpm + ' WPM';
+            var speedWidget = makeSpeedInput({
+                input: speedValue,
+                min: 50, max: 700, step: 25,
+                get: function () { return state.wpm; },
+                set: function (n) { state.wpm = n; saveState(); }
+            });
+            window.__speedWidget = speedWidget;
 
             document.getElementById('playBtn').onclick = function () {
                 if (autoPlay.isPlaying()) autoPlay.stopPlay();
                 else autoPlay.startPlay();
             };
 
+            // ⚙ toggles the floating settings panel (font + speed).
+            var panel = document.getElementById('settingsPanel');
             var gear = document.getElementById('gearBtn');
-            if (gear) {
-                gear.onclick = function () {
-                    if (typeof openModal === 'function') openModal('settingsModal');
-                    else {
-                        var m = document.getElementById('settingsModal');
-                        if (m) m.classList.add('active');
-                    }
+            if (gear && panel) {
+                gear.onclick = function (e) {
+                    e.stopPropagation();
+                    panel.classList.toggle('open');
                 };
+                // click anywhere outside the panel closes it
+                document.addEventListener('click', function (e) {
+                    if (!panel.classList.contains('open')) return;
+                    if (panel.contains(e.target)) return;
+                    if (e.target === gear) return;
+                    panel.classList.remove('open');
+                });
+                document.addEventListener('keydown', function (e) {
+                    if (e.key === 'Escape') panel.classList.remove('open');
+                });
             }
 
+            // 📄 opens the text modal (textarea + prep toolbar only).
+            var textBtn = document.getElementById('textBtn');
             var settingsModal = document.getElementById('settingsModal');
-            if (settingsModal) {
+            if (textBtn && settingsModal) {
+                textBtn.onclick = function () {
+                    if (typeof openModal === 'function') openModal('settingsModal');
+                    else settingsModal.classList.add('active');
+                };
                 settingsModal.onclick = function (e) {
                     if (e.target === settingsModal) {
                         if (typeof closeModal === 'function') closeModal('settingsModal');
@@ -906,16 +990,14 @@
             state.blocks = splitBlocks(input.value);
             state.hasContent = state.blocks.length > 0;
             if (state.idx >= state.blocks.length) state.idx = Math.max(0, state.blocks.length - 1);
-            // sync speed slider label
-            var sv = document.getElementById('speedValue');
-            var ss = document.getElementById('speedSlider');
-            if (sv) sv.textContent = state.wpm + ' WPM';
-            if (ss) ss.value = state.wpm;
+            if (window.__speedWidget) window.__speedWidget.refresh();
         } else {
             loadFromTextbox();
         }
-        applyFontSize();
+        __applyFontSizeLocal();
         render();
+        __syncSizeLabel();
+        if (window.__speedWidget) window.__speedWidget.refresh();
 
         // ============================================================
         // MOBILE: tap left/right half of the display acts as ← / →

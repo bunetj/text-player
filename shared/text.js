@@ -40,8 +40,28 @@ function toLower(text) {
     return result.join('');
 }
 
+// removePunctuation(text)
+// Smart removal: drops punctuation, BUT keeps a mark when it sits
+// between two letters (so "i.e.", "10:30", "U.S.A.", "don't" survive).
+// This is the app-family canonical algorithm, promoted from telegram's
+// /chat rem.
 function removePunctuation(text) {
-    return text.replace(/[^\w\s\n]/g, '');
+    var src = String(text == null ? '' : text);
+    var out = '';
+    for (var i = 0; i < src.length; i++) {
+        var ch = src[i];
+        if (/\p{P}/u.test(ch)) {
+            var prev = i > 0 ? src[i - 1] : '';
+            var next = i + 1 < src.length ? src[i + 1] : '';
+            if (/\p{L}/u.test(prev) && /\p{L}/u.test(next)) {
+                out += ch;
+            }
+            // else: drop
+        } else {
+            out += ch;
+        }
+    }
+    return out;
 }
 
 // Normalize curly quotes / apostrophes to plain ASCII forms.
@@ -169,10 +189,26 @@ function joinBySeparator(arr, sep) {
 }
 
 
-// getDelay(text, wpm) — milliseconds to wait before showing a message.
-function getDelay(text, wpm) {
+// getDelaySimple(text, wpm) — primitive char-based delay.
+// Apps with their own timing algorithm should NOT use this.
+function getDelaySimple(text, wpm) {
     var chars = (text || '').length || 1;
     var ms = Math.round((60 / (wpm || 200)) * (chars / 5) * 1000);
     if (!isFinite(ms) || ms < 100) ms = 800;
     return ms;
+}
+
+
+// textColorForBg(hex) — pick black or white for a colored background.
+// Uses sRGB relative luminance (WCAG-ish). Returns '#000000' or '#ffffff'.
+function textColorForBg(hex) {
+    if (!hex) return '#ffffff';
+    var h = String(hex).replace('#', '');
+    if (h.length === 3) h = h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
+    var r = parseInt(h.substr(0,2), 16) / 255;
+    var g = parseInt(h.substr(2,2), 16) / 255;
+    var b = parseInt(h.substr(4,2), 16) / 255;
+    function lin(c){ return c <= 0.03928 ? c/12.92 : Math.pow((c+0.055)/1.055, 2.4); }
+    var L = 0.2126*lin(r) + 0.7152*lin(g) + 0.0722*lin(b);
+    return L > 0.5 ? '#000000' : '#ffffff';
 }

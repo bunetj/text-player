@@ -390,7 +390,7 @@
         }
         
         .message-container:hover {
-            background: rgba(255, 255, 255, 0.06);
+            background: transparent;
         }
         
         .message-container.sent {
@@ -714,7 +714,7 @@
         }
         
         .modal-content {
-            background: #3a3d44;
+            background: #2b2d31;
             padding: 24px;
             border-radius: 8px;
             width: 440px;
@@ -754,7 +754,7 @@
             flex-shrink: 0;
             position: sticky;
             bottom: 0;
-            background: #3a3d44;
+            background: #2b2d31;
             padding-top: 8px;
         }
 
@@ -766,7 +766,7 @@
         .modal[style*="display: flex"] .modal-buttons {
             position: sticky;
             bottom: 0;
-            background: #3a3d44;
+            background: #2b2d31;
             padding-top: 8px;
         }
         @media (max-height: 600px) {
@@ -811,7 +811,7 @@
             width: 100%;
             padding: 10px 12px;
             margin: 4px 0 8px 0;
-            background: #26292f;
+            background: #1e1f22;
             color: #dbdee1;
             border: 2px solid transparent;
             border-radius: 4px;
@@ -1127,8 +1127,8 @@
             margin-left: -24px;
             margin-right: -24px;
             padding: 12px 24px 16px 24px;
-            background: #3a3d44;
-            border-top: 1px solid #26292f;
+            background: #232428;
+            border-top: 1px solid #1a1b1e;
             display: flex;
             justify-content: flex-end;
             gap: 8px;
@@ -1190,8 +1190,8 @@
             bottom: 0 !important;
             margin-bottom: 0 !important;
             padding: 12px 24px 16px 24px !important;
-            background: #3a3d44 !important;
-            border-top: 1px solid #26292f !important;
+            background: #232428 !important;
+            border-top: 1px solid #1a1b1e !important;
             z-index: 3 !important;
         }
         .modal-content {
@@ -1219,9 +1219,9 @@
            surface-contrast pass 2
            sidebar < main < top-bar < input box
            ============================================ */
-        .app-container          { background: #2f3136 !important; }
-        .main-content           { background: #2f3136 !important; }
-        #chatMessages           { background: #2f3136 !important; }
+        .app-container          { background: #26292f !important; }
+        .main-content           { background: #26292f !important; }
+        #chatMessages           { background: #26292f !important; }
         .top-bar                { background: #36393f !important;
                                   border-bottom: 1px solid #4a4d55 !important;
                                   box-shadow: 0 1px 0 rgba(0,0,0,.45) !important; }
@@ -1229,19 +1229,57 @@
         .server-header          { background: #1e2124 !important;
                                   border-bottom-color: #4a4d55 !important; }
         .input-container        { background: #40444b !important; }
-        .modal-content          { background: #40444b !important; }
+        .modal-content          { background: #2b2d31 !important; }
         .modal input,
         .modal textarea,
         #botResponsesText,
-        #speakerScriptText      { background: #2b2d31 !important; }
-        .modal-buttons          { background: #40444b !important;
-                                  border-top: 1px solid #2b2d31 !important; }
+        #speakerScriptText      { background: #1e1f22 !important; }
+        .modal-buttons          { background: #232428 !important;
+                                  border-top: 1px solid #1a1b1e !important; }
         .chat-item:hover,
         .chat-item.active       { background: #2a2d33 !important; }
         .chat-item:hover .chat-name,
         .chat-item.active .chat-name { color: #ffffff !important; }
-        .chat-action-btn        { color: #b9c0c9 !important; }
+        /* .chat-action-btn: keep the light-blue/grey tone for sidebar action
+           buttons, but NOT for the speaker-editor prep buttons
+           (they set their own color inline). */
+        .chat-action-btn:not(#spkLow):not(#spkPunct):not(#spkSent):not(#spkChunk):not(#spkPlay) {
+            color: #b9c0c9 !important;
+        }
         .persona.add-persona    { background: #2b2d31 !important; }
+
+
+        /* prep buttons: clickable affordance */
+        #spkLow,
+        #spkPunct,
+        #spkSent,
+        #spkChunk {
+            cursor: pointer;
+            transition: background 0.12s ease, color 0.12s ease;
+        }
+        #spkLow:hover,
+        #spkPunct:hover,
+        #spkSent:hover,
+        #spkChunk:hover {
+            background: #3a3d44 !important;
+            color: #ffffff !important;
+        }
+        #spkLow:active,
+        #spkPunct:active,
+        #spkSent:active,
+        #spkChunk:active {
+            background: #232428 !important;
+            color: #ffffff !important;
+        }
+        #spkChunkN {
+            cursor: text;
+        }
+        #spkPlay {
+            cursor: pointer;
+            transition: background 0.12s ease;
+        }
+        #spkPlay:hover { background: #4752c4 !important; }
+        #spkPlay:active { background: #3a44a0 !important; }
 
     </style>
 </head>
@@ -1325,9 +1363,6 @@
                 </select>
             </div>
 
-            <div style="text-align:center; margin:10px 0; color:#b9c0c9; font-size:14px;">
-                Click the palette to choose color
-            </div>
 
             <div class="color-controls">
                 <div class="color-preview" id="colorPreview"></div>
@@ -1338,13 +1373,11 @@
             <div id="botFields" style="display:none;">
                 <label style="color:#b9c0c9; font-size:13px; display:block; margin-bottom:4px;">Responses (one per line)</label>
                 <textarea id="botResponsesText" style="width:100%; height:140px; background:#26292f; color:#dbdee1; border:2px solid transparent; border-radius:4px; padding:10px; font-family:inherit; font-size:14px; resize:vertical; outline:none;"></textarea>
-                <div style="margin-top:6px; color:#b9c0c9; font-size:12px;">Responses: <span id="botResponseCount">0</span></div>
             </div>
 
             <div id="speakerFields" style="display:none;">
                 <label style="color:#b9c0c9; font-size:13px; display:block; margin-bottom:4px;">Script (blank line = new block)</label>
                 <textarea id="speakerScriptText" style="width:100%; height:140px; background:#26292f; color:#dbdee1; border:2px solid transparent; border-radius:4px; padding:10px; font-family:inherit; font-size:14px; resize:vertical; outline:none;"></textarea>
-                <div style="margin-top:6px; color:#b9c0c9; font-size:12px;">Blocks: <span id="speakerBlockCount">0</span></div>
                 <div style="display:flex; gap:4px; margin-top:8px; flex-wrap:wrap;">
                     <button type="button" class="chat-action-btn" id="spkLow" style="background:#26292f; padding:4px 10px; color:#dbdee1; border-radius:4px;">low</button>
                     <button type="button" class="chat-action-btn" id="spkPunct" style="background:#26292f; padding:4px 10px; color:#dbdee1; border-radius:4px;">punct</button>
@@ -1355,10 +1388,11 @@
                 </div>
                 <div style="display:flex; align-items:center; gap:8px; margin-top:10px;">
                     <button type="button" id="spkPlay" style="background:#5865f2; color:#fff; border:none; border-radius:4px; padding:6px 14px; font-weight:600; font-size:13px;">▶ Play</button>
-                    <input type="range" id="spkSpeed" min="50" max="700" step="25" value="250" style="flex:1;">
-                    <span id="spkSpeedLabel" style="color:#b9c0c9; font-size:12px; min-width:60px;">250 CPM</span>
+                    <input type="number" id="spkSpeed" value="250" min="50" max="700" step="25"
+                           style="width:64px;padding:3px 6px;background:#1e1f22;border:none;
+                                  color:#dbdee1;font-size:12px;text-align:center;font-family:inherit;">
+                    <span id="spkSpeedLabel" style="color:#b9c0c9; font-size:12px;">CPM</span>
                 </div>
-                <div style="margin-top:6px; color:#b9c0c9; font-size:12px;">Next block: <span id="spkPos">0</span>/<span id="spkTotal">0</span></div>
             </div>
             </div>
 
@@ -1385,18 +1419,21 @@
     </div><!-- Info Modal -->
     <div id="infoModal" class="modal">
         <div class="modal-content">
-            <h3>ℹ️ Discord Info</h3>
+            <h3>ℹ️ Info</h3>
             <p>• <strong>Private:</strong> All data stored in your browser (localStorage)</p>
             <p>• <strong>Edit persona:</strong> Right-click on any avatar</p>
-            <p>• <strong>Formatting:</strong> Markdown works in messages</p>
-            <p>• <strong>Channels:</strong> Create multiple channels for different conversations</p>
-            <p>• <strong>Click avatar</strong> to switch active persona</p>
             <div class="modal-buttons">
                 <button class="btn-secondary" id="closeInfoModal">Close</button>
             </div>
         </div>
     </div>
     
+    <script src="../shared/markdown.js"></script>
+    <script src="../shared/clipboard.js"></script>
+    <script src="../shared/store.js"></script>
+<script src="../shared/persist.js"></script>
+    <script src="../shared/text.js"></script>
+<script src="../shared/speed.js"></script>
     <script>
         // ============================================
         // JAVASCRIPT - Complete App Logic
@@ -1434,47 +1471,20 @@
         // Typing indicator elements removed
         const channelTopic = document.getElementById("channelTopic");
 
-        // ===== tiny offline markdown -> html =====
-        function __mdEsc(s) {
-            return String(s).replace(/[&<>"']/g, m => ({
-                '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
-            }[m]));
+        // ----- File mirror helper -----
+        // One blob per channel: { messages, personas, activePersonaId }.
+        function pSaveChannel(chatId) {
+            if (!chatId) return;
+            var messages = [];
+            try { messages = JSON.parse(localStorage.getItem('mirrorChat') || '[]'); } catch (e) {}
+            var blob = {
+                messages: messages,
+                personas: personas,
+                activePersonaId: activePersonaId,
+            };
+            pSave('discord', 'mirrorChatFull_' + chatId, 'chats/' + chatId + '.json', blob);
         }
-        function __md(md) {
-            md = String(md == null ? '' : md);
-            var placeholders = [];
-            function stash(html) {
-                placeholders.push(html);
-                return '\u0000' + (placeholders.length - 1) + '\u0000';
-            }
-            md = md.replace(/```([\s\S]*?)```/g, function (_, code) {
-                return stash('<pre><code>' + __mdEsc(code.replace(/^\n/, '')) + '</code></pre>');
-            });
-            md = md.replace(/`([^`\n]+)`/g, function (_, c) {
-                return stash('<code>' + __mdEsc(c) + '</code>');
-            });
-            md = __mdEsc(md);
-            md = md.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, function (_, t, u) {
-                return '<a href="' + u + '" target="_blank" rel="noopener">' + t + '</a>';
-            });
-            md = md.replace(/(^|[^"'>])(https?:\/\/[^\s<]+)/g, function (_, pre, url) {
-                return pre + '<a href="' + url + '" target="_blank" rel="noopener">' + url + '</a>';
-            });
-            md = md.replace(/^### (.*)$/gm, '<h3>$1</h3>');
-            md = md.replace(/^## (.*)$/gm,  '<h2>$1</h2>');
-            md = md.replace(/^# (.*)$/gm,   '<h1>$1</h1>');
-            md = md.replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
-            md = md.replace(/(^|\W)\*([^*\n]+)\*(\W|$)/g, '$1<i>$2</i>$3');
-            md = md.replace(/^\s*[-*] (.*)$/gm, '<li>$1</li>');
-            md = md.replace(/(<li>[\s\S]*?<\/li>)(?!\s*<li>)/g, '<ul>$1</ul>');
-            md = md.replace(/<\/ul>\s*<ul>/g, '');
-            md = md.replace(/\n{2,}/g, '</p><p>');
-            md = md.replace(/\n/g, '<br>');
-            md = '<p>' + md + '</p>';
-            md = md.replace(/\u0000(\d+)\u0000/g, function (_, i) { return placeholders[+i]; });
-            return md;
-        }
-        
+
         // ----- App State -----
         let personas = [];
         let activePersonaId = null;
@@ -1488,39 +1498,7 @@
         
         
         // ----- Auto Text Color -----
-        function getTextColor(hexColor) {
-            // Convert hex to RGB
-            let r, g, b;
-            if (hexColor.startsWith('#')) {
-                const hex = hexColor.slice(1);
-                if (hex.length === 3) {
-                    r = parseInt(hex[0] + hex[0], 16);
-                    g = parseInt(hex[1] + hex[1], 16);
-                    b = parseInt(hex[2] + hex[2], 16);
-                } else {
-                    r = parseInt(hex.slice(0, 2), 16);
-                    g = parseInt(hex.slice(2, 4), 16);
-                    b = parseInt(hex.slice(4, 6), 16);
-                }
-            } else {
-                // Handle rgb/rgba format
-                const match = hexColor.match(/\d+/g);
-                if (match) {
-                    r = parseInt(match[0]);
-                    g = parseInt(match[1]);
-                    b = parseInt(match[2]);
-                } else {
-                    return '#ffffff'; // Default to white
-                }
-            }
             
-            // Calculate perceived brightness (YIQ formula)
-            const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-            
-            // Return black for bright colors, white for dark colors
-            return brightness > 128 ? '#000000' : '#ffffff';
-        }
-    
         
         // Bot responses
         const botResponses = [
@@ -1554,6 +1532,7 @@
             `mirrorChat_${currentChatId}`,
             JSON.stringify(messages)
         );
+        pSaveChannel(currentChatId);
     }
 
     renderChat();
@@ -1563,6 +1542,14 @@
                 // ----- Initialize -----
         function initializeChats() {
             let chats = localStorage.getItem("mirrorChats");
+            if (!chats) {
+                pLoad('discord', 'mirrorChats', 'feed.json').then(function (fileChats) {
+                    if (Array.isArray(fileChats) && fileChats.length) {
+                        try { localStorage.setItem('mirrorChats', JSON.stringify(fileChats)); } catch (e) {}
+                        initializeChats();
+                    }
+                });
+            }
             if (!chats) {
                 const firstChat = {
                     id: "chat_" + Date.now(),
@@ -1591,6 +1578,7 @@
         // ----- Chat List -----
         function renderChatsList() {
             const chats = JSON.parse(localStorage.getItem("mirrorChats") || "[]");
+            pSave('discord', 'mirrorChats', 'feed.json', chats);
             chatsList.innerHTML = "";
             
             chats.forEach((chat) => {
@@ -1698,6 +1686,7 @@
                 localStorage.removeItem(`mirrorChat_${chatId}`);
                 localStorage.removeItem(`mirrorChatPersonas_${chatId}`);
                 localStorage.removeItem(`mirrorChatActivePersona_${chatId}`);
+                pDelete('discord', 'mirrorChatFull_' + chatId, 'chats/' + chatId + '.json');
                 
                 if (currentChatId === chatId) {
                     switchToChat(filteredChats[0].id);
@@ -1782,6 +1771,16 @@
         localStorage.setItem("mirrorChat", savedMessages);
     } else {
         localStorage.removeItem("mirrorChat");
+        pLoad('discord', 'mirrorChatFull_' + currentChatId, 'chats/' + currentChatId + '.json')
+            .then(function (blob) {
+                if (!blob) return;
+                try {
+                    if (blob.messages) localStorage.setItem('mirrorChat', JSON.stringify(blob.messages));
+                    if (blob.personas) localStorage.setItem('mirrorChatPersonas_' + currentChatId, JSON.stringify(blob.personas));
+                    if (blob.activePersonaId) localStorage.setItem('mirrorChatActivePersona_' + currentChatId, blob.activePersonaId);
+                } catch (e) {}
+                loadCurrentChat();
+            });
     }
 
     updateChannelTopic();
@@ -1796,6 +1795,7 @@
                     `mirrorChatPersonas_${currentChatId}`,
                     JSON.stringify(personas)
                 );
+                pSaveChannel(currentChatId);
             }
         }
         
@@ -1807,6 +1807,7 @@
                     `mirrorChatActivePersona_${currentChatId}`,
                     personaId
                 );
+                pSaveChannel(currentChatId);
             }
             
             document.querySelectorAll(".persona").forEach((el) => {
@@ -1832,13 +1833,17 @@
     document.getElementById("personaType").disabled = false;
     document.getElementById("botResponsesText").value = "";
     document.getElementById("speakerScriptText").value = "";
-    document.getElementById("botResponseCount").textContent = "0";
-    document.getElementById("speakerBlockCount").textContent = "0";
-    document.getElementById("spkPos").textContent = "0";
-    document.getElementById("spkTotal").textContent = "0";
+    var __brc = document.getElementById("botResponseCount");
+    if (__brc) __brc.textContent = "0";
+    var __sbc = document.getElementById("speakerBlockCount");
+    if (__sbc) __sbc.textContent = "0";
+    var __posEl2 = document.getElementById("spkPos");
+    if (__posEl2) __posEl2.textContent = "0";
+    var __totEl2 = document.getElementById("spkTotal");
+    if (__totEl2) __totEl2.textContent = "0";
     document.getElementById("spkPlay").textContent = "▶ Play";
     document.getElementById("spkSpeed").value = "250";
-    document.getElementById("spkSpeedLabel").textContent = "250 CPM";
+    if (window.__spkSpeedWidget) window.__spkSpeedWidget.refresh();
     selectedColor = "#5865f2";
     updateColorPreview();
     updatePersonaTypeVisibility();
@@ -1866,17 +1871,19 @@
     const spkText = document.getElementById("speakerScriptText");
     if (type === "bot") {
         botText.value = (persona.responses || []).join("\n");
-        document.getElementById("botResponseCount").textContent = (persona.responses || []).length;
+        var __brcEdit = document.getElementById("botResponseCount");
+        if (__brcEdit) __brcEdit.textContent = (persona.responses || []).length;
     } else if (type === "speaker") {
         spkText.value = persona.script || "";
         updateSpeakerBlockCount();
-        const total = splitBlocks(persona.script || "").length;
+        const total = splitByBlankLines(persona.script || "").length;
         if ((persona.scriptPos || 0) >= total) persona.scriptPos = 0;
-        document.getElementById("spkPos").textContent = persona.scriptPos || 0;
-        document.getElementById("spkTotal").textContent = total;
+        var __posEl = document.getElementById("spkPos");
+        if (__posEl) __posEl.textContent = persona.scriptPos || 0;
+        var __totEl = document.getElementById("spkTotal");
+        if (__totEl) __totEl.textContent = total;
         document.getElementById("spkPlay").textContent = speakerTimers[personaId] ? "⏹ Stop" : "▶ Play";
-        document.getElementById("spkSpeed").value = persona.speed || 250;
-        document.getElementById("spkSpeedLabel").textContent = (persona.speed || 250) + " CPM";
+        if (window.__spkSpeedWidget) window.__spkSpeedWidget.refresh();
     }
 
     updateColorPreview();
@@ -1909,7 +1916,10 @@
                     .split("\n").map(s => s.trim()).filter(s => s !== "");
                 personas[idx].responses = lines.length ? lines : botResponses.slice();
             } else if (personas[idx].type === "speaker") {
-                // script/speed are committed by clicking Play, not by Save
+                // commit script + speed on Save
+                personas[idx].script = document.getElementById("speakerScriptText").value;
+                personas[idx].speed = parseInt(document.getElementById("spkSpeed").value, 10) || 250;
+                if (typeof personas[idx].scriptPos !== "number") personas[idx].scriptPos = 0;
             }
         }
     } else {
@@ -1985,7 +1995,7 @@
         avatar.className = `persona ${persona.id === activePersonaId ? "active" : ""}`;
         avatar.style.background = persona.color;
         avatar.textContent = persona.symbol;
-        avatar.style.color = getTextColor(persona.color);
+        avatar.style.color = textColorForBg(persona.color);
         avatar.dataset.id = persona.id;
         avatar.title = `${persona.name} (${persona.symbol}) - Click to select, Right-click to edit`;
 
@@ -2099,24 +2109,28 @@
                 messageContainer.className = `message-container received${isSent ? " is-self" : ""}`;
                 messageContainer.dataset.messageId = msgData.id || `msg_${index}`;
                 
-                // Avatar
+                // Avatar: only on the first message of the group;
+                // empty spacer on subsequent messages so text stays aligned.
                 const avatarWrapper = document.createElement("div");
                 avatarWrapper.className = "avatar-wrapper";
-                
-                const avatar = document.createElement("div");
-                avatar.className = "message-avatar";
-                avatar.style.background = persona.color;
-                avatar.textContent = persona.symbol;
-                avatar.style.color = getTextColor(persona.color);
-                avatar.style.color = getTextColor(persona.color);
-                avatar.style.opacity = isDeleted ? "0.6" : "1";
-                
-                // Status dot
-                const statusDot = document.createElement("div");
-                statusDot.className = `status-dot`;
-                avatar.appendChild(statusDot);
-                
-                avatarWrapper.appendChild(avatar);
+
+                if (isNewGroup) {
+                    const avatar = document.createElement("div");
+                    avatar.className = "message-avatar";
+                    avatar.style.background = persona.color;
+                    avatar.textContent = persona.symbol;
+                    avatar.style.color = textColorForBg(persona.color);
+                    avatar.style.opacity = isDeleted ? "0.6" : "1";
+
+                    // Status dot
+                    const statusDot = document.createElement("div");
+                    statusDot.className = `status-dot`;
+                    avatar.appendChild(statusDot);
+
+                    avatarWrapper.appendChild(avatar);
+                }
+                // else: leave wrapper empty — same width, no avatar.
+
                 messageContainer.appendChild(avatarWrapper);
                 
                 // Message bubble
@@ -2159,6 +2173,7 @@
                     `mirrorChat_${currentChatId}`,
                     JSON.stringify(messages)
                 );
+                pSaveChannel(currentChatId);
             }
             
             messageInput.value = "";
@@ -2192,14 +2207,10 @@
                 exportText += `${name}:\n${msgData.text}\n\n`;
             });
             
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(exportText).then(
-                    () => alert("Chat copied to clipboard."),
-                    () => prompt("Copy the chat manually:", exportText)
-                );
-            } else {
-                prompt("Copy the chat manually:", exportText);
-            }
+            writeClipboard(exportText, function (status) {
+                if (status === 'ok') alert("Chat copied to clipboard.");
+                else prompt("Copy the chat manually:", exportText);
+            });
         }
         
         // ----- Color Picker -----
@@ -2349,7 +2360,6 @@
             infoModal.style.display = "none";
         });
 
-
     
     
     
@@ -2465,16 +2475,26 @@
         if (spkPlay) spkPlay.addEventListener("click", () => {
             if (editingPersonaId) speakerPlayToggle(editingPersonaId);
         });
-        const spkSpeed = document.getElementById("spkSpeed");
-        if (spkSpeed) spkSpeed.addEventListener("input", () => {
-            document.getElementById("spkSpeedLabel").textContent = spkSpeed.value + " CPM";
-            const p = personas.find(x => x.id === editingPersonaId);
-            if (p && p.type === "speaker") p.speed = parseInt(spkSpeed.value) || 250;
-        });
+        const spkSpeedEl = document.getElementById("spkSpeed");
+        if (spkSpeedEl) {
+            window.__spkSpeedWidget = makeSpeedInput({
+                input: spkSpeedEl,
+                min: 50, max: 700, step: 25,
+                get: function () {
+                    var p = personas.find(x => x.id === editingPersonaId);
+                    return (p && typeof p.speed === 'number') ? p.speed : 250;
+                },
+                set: function (n) {
+                    var p = personas.find(x => x.id === editingPersonaId);
+                    if (p && p.type === "speaker") p.speed = n;
+                }
+            });
+        }
         const botRespEl = document.getElementById("botResponsesText");
         if (botRespEl) botRespEl.addEventListener("input", () => {
             const n = botRespEl.value.split("\n").map(s => s.trim()).filter(s => s !== "").length;
-            document.getElementById("botResponseCount").textContent = n;
+            const __brcIn = document.getElementById("botResponseCount");
+            if (__brcIn) __brcIn.textContent = n;
         });
 
         // migrate on load
@@ -2486,65 +2506,54 @@
         });
     
 
-function updatePersonaTypeVisibility() {
-    // In Create mode (no editingPersonaId) hide both extra field blocks.
-    // In Edit mode show only the block that matches this persona's type.
-    const bf = document.getElementById("botFields");
-    const sf = document.getElementById("speakerFields");
-    if (!bf || !sf) return;
-
-    if (!editingPersonaId) {
-        bf.style.display = "none";
-        sf.style.display = "none";
-        return;
-    }
-
-    const typeEl = document.getElementById("personaType");
-    const type = typeEl ? typeEl.value : "ordinary";
-    bf.style.display = (type === "bot") ? "block" : "none";
-    sf.style.display = (type === "speaker") ? "block" : "none";
-    if (type === "speaker" && typeof updateSpeakerBlockCount === "function") {
-        updateSpeakerBlockCount();
-    }
-}
-
-function splitBlocks(text) {
-    return text.split(/\n\s*\n/).filter(s => s.trim() !== "");
-}
 
 function updateSpeakerBlockCount() {
     const txt = document.getElementById("speakerScriptText").value;
-    const n = splitBlocks(txt).length;
-    document.getElementById("speakerBlockCount").textContent = n;
-    document.getElementById("spkTotal").textContent = n;
+    const n = splitByBlankLines(txt).length;
+    const bc = document.getElementById("speakerBlockCount");
+    if (bc) bc.textContent = n;
+    const tot = document.getElementById("spkTotal");
+    if (tot) tot.textContent = n;
 }
 
 function applySpeakerPrep(mode) {
-    const el = document.getElementById("speakerScriptText");
-    let raw = el.value;
+    var el = document.getElementById("speakerScriptText");
+    var raw = el.value;
+    var blocks = splitByBlankLines(raw);
+
     if (mode === "low") {
-        raw = raw.split(/\n\s*\n/).map(b => {
-            // simple lowercasing matching the app family
-            return b.toLowerCase();
-        }).join("\n\n");
+        var lowered = blocks.map(function (b) { return toLower(b); });
+        raw = lowered.join("\n\n");
     } else if (mode === "punct") {
-        const cleaned = raw.replace(/[.,!?;:"'`´—–]/g, "§");
-        raw = cleaned.split(/§+/).filter(s => s.trim()).map(s => s.trim()).join("\n\n");
-    } else if (mode === "sent") {
-        const parts = raw.split(/(?<=[.!?…])\s+/).filter(s => s.trim());
-        raw = parts.map(s => s.trim()).join("\n\n");
-    } else if (mode === "chunk") {
-        const n = parseInt(document.getElementById("spkChunkN").value) || 3;
-        const blocks = splitBlocks(raw);
-        const out = [];
-        blocks.forEach(b => {
-            const words = b.split(/\s+/).filter(w => w.length);
-            for (let i = 0; i < words.length; i += n) {
-                out.push(words.slice(i, i + n).join(" "));
+        var out = [];
+        for (var i = 0; i < blocks.length; i++) {
+            var parts = splitPunct(blocks[i], { strip: true });
+            for (var j = 0; j < parts.length; j++) {
+                if (parts[j]) out.push(parts[j]);
             }
-        });
+        }
         raw = out.join("\n\n");
+    } else if (mode === "sent") {
+        var out2 = [];
+        for (var k = 0; k < blocks.length; k++) {
+            var parts2 = splitSentences(blocks[k]);
+            for (var m = 0; m < parts2.length; m++) {
+                if (parts2[m] && parts2[m].trim()) out2.push(parts2[m].trim());
+            }
+        }
+        raw = out2.join("\n\n");
+    } else if (mode === "chunk") {
+        var n = parseInt(document.getElementById("spkChunkN").value) || 3;
+        var out3 = [];
+        for (var p = 0; p < blocks.length; p++) {
+            var chunks = splitWords(blocks[p], n);
+            for (var q = 0; q < chunks.length; q++) {
+                if (chunks[q].trim()) out3.push(chunks[q]);
+            }
+        }
+        raw = out3.join("\n\n");
     }
+
     el.value = raw;
     updateSpeakerBlockCount();
 }
@@ -2554,7 +2563,7 @@ let speakerTimers = {};
 function speakerNextBlock(personaId) {
     const p = personas.find(x => x.id === personaId);
     if (!p || p.type !== "speaker") return;
-    const blocks = splitBlocks(p.script || "");
+    const blocks = splitByBlankLines(p.script || "");
     if (!blocks.length) return;
     const pos = p.scriptPos || 0;
     if (pos >= blocks.length) {
@@ -2579,16 +2588,17 @@ function speakerNextBlock(personaId) {
         localStorage.setItem(`mirrorChat_${currentChatId}`, JSON.stringify(messages));
     }
     savePersonas();
+    if (currentChatId) pSaveChannel(currentChatId);
     renderChat();
 
     const posEl = document.getElementById("spkPos");
     if (posEl && editingPersonaId === personaId) posEl.textContent = p.scriptPos;
+    // (no counter — element removed)
 }
 
 function sendSpeakerMessage(personaId) {
     speakerNextBlock(personaId);
 }
-
 
 function getSpeakerDelay(item, cpm) {
     const chars = item ? item.length : 0;
@@ -2620,14 +2630,18 @@ function speakerPlayToggle(personaId) {
     const ta = document.getElementById("speakerScriptText");
     if (ta) p.script = ta.value;
     const sp = document.getElementById("spkSpeed");
-    if (sp) p.speed = parseInt(sp.value) || 250;
+    if (sp) p.speed = parseInt(sp.value, 10) || 250;
     p.scriptPos = 0;
     savePersonas();
 
-    const blocks = splitBlocks(p.script || "");
+    const blocks = splitByBlankLines(p.script || "");
     if (!blocks.length) return;
     if ((p.scriptPos || 0) >= blocks.length) p.scriptPos = 0;
     if (btn) btn.textContent = "\u23f9 Stop";
+
+    // Close the persona modal so the user can watch playback in the chat.
+    const pm = document.getElementById("personaModal");
+    if (pm) pm.style.display = "none";
 
     const cpm = p.speed || 3;   // slider value (kept in state.speed on persona)
 
@@ -2639,7 +2653,7 @@ function speakerPlayToggle(personaId) {
             if (btn) btn.textContent = "\u25b6 Play";
             return;
         }
-        const list = splitBlocks(still.script || "");
+        const list = splitByBlankLines(still.script || "");
         const pos = still.scriptPos || 0;
         if (pos >= list.length) {
             delete speakerTimers[personaId];
@@ -2656,7 +2670,6 @@ function speakerPlayToggle(personaId) {
     const firstText = blocks[0];
     speakerTimers[personaId] = setTimeout(step, getSpeakerDelay(firstText, cpm));
 }
-
 
 function migratePersonas(list) {
     const legacy = localStorage.getItem("botResponses");
@@ -2680,36 +2693,6 @@ function migratePersonas(list) {
             if (typeof p.speed !== "number") p.speed = 250;
         }
     });
-}
-
-
-function wireSpeakerControls() {
-    const spkPlay = document.getElementById("spkPlay");
-    if (spkPlay) {
-        spkPlay.onclick = () => {
-            if (!editingPersonaId) return;
-            speakerPlayToggle(editingPersonaId);
-        };
-    }
-    const spkLow = document.getElementById("spkLow");
-    if (spkLow) spkLow.onclick = () => applySpeakerPrep("low");
-    const spkPunct = document.getElementById("spkPunct");
-    if (spkPunct) spkPunct.onclick = () => applySpeakerPrep("punct");
-    const spkSent = document.getElementById("spkSent");
-    if (spkSent) spkSent.onclick = () => applySpeakerPrep("sent");
-    const spkChunk = document.getElementById("spkChunk");
-    if (spkChunk) spkChunk.onclick = () => applySpeakerPrep("chunk");
-    const spkText = document.getElementById("speakerScriptText");
-    if (spkText) spkText.oninput = () => updateSpeakerBlockCount();
-    const spkSpeed = document.getElementById("spkSpeed");
-    if (spkSpeed) {
-        spkSpeed.oninput = () => {
-            const lbl = document.getElementById("spkSpeedLabel");
-            if (lbl) lbl.textContent = spkSpeed.value + " CPM";
-            const p = personas.find(x => x.id === editingPersonaId);
-            if (p && p.type === "speaker") p.speed = parseInt(spkSpeed.value) || 250;
-        };
-    }
 }
 
 

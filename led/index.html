@@ -241,7 +241,10 @@
     </div>
 
     <script src="../shared/text.js"></script>
+    <script src="../shared/font.js"></script>
     <script src="../shared/prep.js"></script>
+    <script src="../shared/store.js"></script>
+<script src="../shared/speed.js"></script>
     <script>
         // -------- STATE --------
         const state = {
@@ -431,19 +434,17 @@
             const sq = document.getElementById('colorSquare');
             if (sq) sq.style.background = color;
         }
-        function applyFontSize() {
-            const label = document.getElementById('sizeLabel');
-            if (label) label.textContent = state.fontSize + 'px';
-            render();
-        }
+        function __applyFontSizeLocal() {
+    applyFontSize(display, state.fontSize);
+}
         function fontIncrease() {
             state.fontSize = Math.min(state.fontSize + 2, 60);
-            applyFontSize();
+            __applyFontSizeLocal();
             saveState();
         }
         function fontDecrease() {
             state.fontSize = Math.max(state.fontSize - 2, 10);
-            applyFontSize();
+            __applyFontSizeLocal();
             saveState();
         }
 
@@ -792,10 +793,9 @@
       </div>
       <div class="menu-section">
         <span class="menu-label">Speed</span>
-        <button class="menu-btn" id="slowerBtn">🐢−</button>
-        <input type="range" class="menu-range" id="speedSlider" min="1" max="10" step="1" value="3">
-        <button class="menu-btn" id="fasterBtn">🐇+</button>
-        <span class="menu-label-display" id="speedValue">2</span>
+        <input type="number" id="speedValue" value="3" min="1" max="10" step="1"
+               style="width:48px;padding:2px 6px;background:#1f3040;border:none;
+                      color:#e0edf8;font-size:12px;text-align:center;font-family:inherit;">
       </div>
       <div class="menu-section">
         <span class="menu-label">Color</span>
@@ -831,26 +831,13 @@
             document.getElementById('fontSmall').onclick = fontDecrease;
             document.getElementById('fontBig').onclick = fontIncrease;
             
-            const speedSlider = document.getElementById('speedSlider');
             const speedValue = document.getElementById('speedValue');
-            document.getElementById('slowerBtn').onclick = function () {
-                state.speed = Math.max(state.speed - 1, 1);
-                speedSlider.value = state.speed;
-                speedValue.textContent = state.speed;
-                saveState();
-            };
-            document.getElementById('fasterBtn').onclick = function () {
-                state.speed = Math.min(state.speed + 1, 10);
-                speedSlider.value = state.speed;
-                speedValue.textContent = state.speed;
-                saveState();
-            };
-            speedSlider.oninput = function (e) {
-                state.speed = parseInt(e.target.value);
-                speedValue.textContent = state.speed;
-                saveState();
-            };
-            speedValue.textContent = state.speed;
+            window.__speedWidget = makeSpeedInput({
+                input: speedValue,
+                min: 1, max: 10, step: 1,
+                get: function () { return state.speed; },
+                set: function (n) { state.speed = n; saveState(); }
+            });
 
             document.getElementById('playBtn').onclick = togglePlay;
 
@@ -979,11 +966,8 @@
             pickInit.value = state.color;
             setColor(state.color);
         }
-        const speedSliderInit = document.getElementById('speedSlider');
-        const speedValueInit = document.getElementById('speedValue');
-        if (speedSliderInit) speedSliderInit.value = state.speed;
-        if (speedValueInit) speedValueInit.textContent = state.speed;
-        applyFontSize();
+        if (window.__speedWidget) window.__speedWidget.refresh();
+        __applyFontSizeLocal();
         // Parse messages from textarea into state, but do NOT render.
         state.messages = splitByBlankLines(input.value);
         if (!state.messages.length) state.messages = [''];

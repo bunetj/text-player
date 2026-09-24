@@ -27,7 +27,7 @@ function __md(md) {
     md = md.replace(/^## (.*)$/gm,  '<h2>$1</h2>');
     md = md.replace(/^# (.*)$/gm,   '<h1>$1</h1>');
     md = md.replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
-    md = md.replace(/(^|\W)\*([^*\n]+)\*(\W|$)/g, '$1<i>$2</i>$3');
+    md = md.replace(/(^|[^\w_])_([^_\n]+)_(?!\w)/g, '$1<i>$2</i>');
     md = md.replace(/^\s*[-*] (.*)$/gm, '<li>$1</li>');
     md = md.replace(/(<li>[\s\S]*?<\/li>)(?!\s*<li>)/g, '<ul>$1</ul>');
     md = md.replace(/<\/ul>\s*<ul>/g, '');

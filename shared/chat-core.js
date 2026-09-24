@@ -44,6 +44,7 @@ function exportChatShared(msgsEl, opts, nameFor) {
 
     var items = msgsEl.querySelectorAll('.msg');
     var parts = [];
+    var prevName = null;
     for (var i = 0; i < items.length; i++) {
         var m = items[i];
         var isOwn     = m.classList.contains('own');
@@ -54,14 +55,21 @@ function exportChatShared(msgsEl, opts, nameFor) {
         var inReactedSet = wantReacted && isReacted;
         if (!inSpeakerSet && !inReactedSet) continue;
 
-        var text = m.textContent.trim();
+        var __raw = m.getAttribute('data-raw');
+        var text = (__raw != null ? __raw : m.textContent).trim();
         if (!text) continue;
 
         var heart = isReacted ? '\n❤' : '';
         if (singleSpeaker) {
             parts.push(text + heart);
         } else {
-            parts.push('[' + nameFor(isOwn) + ']\n' + text + heart);
+            var nm = nameFor(isOwn);
+            if (nm !== prevName) {
+                parts.push('[' + nm + ']\n' + text + heart);
+                prevName = nm;
+            } else {
+                parts.push(text + heart);
+            }
         }
     }
 
