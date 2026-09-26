@@ -52,19 +52,19 @@ typical commands
 from a folder or file to readings/ (pdf, epub, docx to txt):
 
 ```
-py readings.py extract c:\books --recursive
+py readings.py convert c:\books --recursive
 ```
 
 the whole readings/ folder to tg:
 
 ```
-py readings.py publish --app tg --chat "pdf low punct rem"
+py readings.py import --app tg --chat "pdf low punct rem"
 ```
 
 some file to tg:
 
 ```
-py readings.py publish readings\text.txt --app tg --chat "pdf low punct rem"
+py readings.py import readings\text.txt --app tg --chat "pdf low punct rem"
 ```
 
 ### chat style formatters
