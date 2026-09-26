@@ -212,3 +212,33 @@ function textColorForBg(hex) {
     var L = 0.2126*lin(r) + 0.7152*lin(g) + 0.0722*lin(b);
     return L > 0.5 ? '#000000' : '#ffffff';
 }
+
+
+// ===== merged from shared/pdf.js =====
+(function () {
+    function formatAsPdf(text) {
+        if (typeof text !== 'string') return text;
+
+        // normalize line endings
+        text = text.replace(/\r\n?/g, '\n');
+
+        // 1) newline + optional leading spaces + uppercase  ->  blank line + uppercase
+        //    \s* between is safe here: no \n can be consumed because [\n] is
+        //    matched first and \s* is anchored right after a newline.
+        text = text.replace(/\n[ \t]*(\p{Lu})/gu, '\n\n$1');
+
+        // 2) single newline NOT followed by another newline and NOT followed
+        //    by an uppercase letter  ->  single space.
+        //    The (?<!\n) and (?!\n) guards keep paragraph breaks intact, so
+        //    running the function twice is a no-op on already-formatted text.
+        text = text.replace(/(?<!\n)\n(?!\n)(?!\p{Lu})/gu, ' ');
+
+        // 3) collapse runs of blank lines: 3+ newlines in a row -> 2.
+        //    (2 newlines = one blank line, which is the separator we want.)
+        text = text.replace(/\n{3,}/g, '\n\n');
+
+        return text;
+    }
+
+    window.formatAsPdf = formatAsPdf;
+})();

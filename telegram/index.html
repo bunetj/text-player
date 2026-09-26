@@ -30,7 +30,7 @@
         #modal .color-preview * { border-radius: 50% !important; }
 /* #chatView must overlay the main area, not flex-sibling the sidebar. */
         #chatView {
-            position: absolute; top: 0; right: 80px; bottom: 0; left: 80px;
+            position: absolute; top: 0; right: 0; bottom: 0; left: 0;
             width: auto !important;
             flex: none !important;
         }
@@ -136,8 +136,6 @@
     </style>
     <link rel="stylesheet" href="../shared/telegram.css">
     <link rel="stylesheet" href="../shared/modal.css">
-    <link rel="stylesheet" href="../shared/style.css">
-
 <style>
 /* ===== __TGC_MERGE__ styles: sidebar, unified feed, channel view, modals ===== */
 #sidebar {
@@ -149,9 +147,13 @@
 #sidebar::-webkit-scrollbar { width: 4px; }
 #sidebar::-webkit-scrollbar-thumb { background: #2b3a4a; border-radius: 2px; }
 .folder-item {
-  width: 100%; min-height: 40px; display: flex; flex-direction: column;
-  align-items: center; justify-content: center; padding: 6px 4px;
+  width: 100%;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: flex-start;
+  padding: 6px 4px;
   cursor: pointer; user-select: none; border-radius: 6px;
+  flex: 0 0 auto;          /* grow with content, never shrink */
+  box-sizing: border-box;
 }
 .folder-item:hover { background: rgba(255,255,255,.05); }
 .folder-item.active { background: rgba(82,136,193,.15); }
@@ -161,11 +163,18 @@
   font-size: 18px; line-height: 1;
   display: flex; align-items: center; justify-content: center;
   white-space: nowrap; max-width: 100%; overflow: hidden;
+  width: 100%; height: 24px;   /* fixed icon row, same for all */
+  flex: 0 0 24px;
 }
 .folder-label {
   font-size: 10px; line-height: 1.15; text-align: center;
-  margin-top: 3px; color: #708499; word-break: break-word;
+  margin-top: 3px; color: #708499;
+  word-break: break-word;
+  overflow-wrap: anywhere;
   width: 100%; padding: 0 2px;
+  /* let the label grow the item instead of overflowing into the next */
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 
@@ -274,11 +283,12 @@ body.inner-view #sidebar { display: none !important; }
 /* __TGC_V15__ */
 /* __TGC_V16__ */
 .post {
-  position: relative; background: #1e2c3a; border-radius: 12px;
+  position: relative; background: #1e2c3a;
   padding: 8px 9px; font-size: 14px; line-height: 21px;
   color: #fff; white-space: pre-wrap; word-wrap: break-word;
   max-width: min(480px, 85%); align-self: flex-start;
   box-shadow: 0 2px 6px 0 rgba(0,0,0,.35), 0 0 0 1px rgba(255,255,255,.04);
+  border-radius: 12px !important;
 }/* __TGC_V12__ */
 .post a { color: #5a9fd4; text-decoration: none; }
 .post a:hover { text-decoration: underline; }
@@ -590,7 +600,6 @@ body.inner-view #sidebar { display: none !important; }
             </div>
         </div>
     </div>
-
 <script src="../shared/bubble.js"></script>
 <script src="../shared/markdown.js"></script>
 <script src="../shared/clipboard.js"></script>
@@ -601,7 +610,6 @@ body.inner-view #sidebar { display: none !important; }
 <script src="../shared/persist.js"></script>
 <script src="../shared/text.js"></script>
 <script src="../shared/prep.js"></script>
-<script src="../shared/pdf.js"></script>
 <script>
         // ============================================================
         // RP CHAT — two people, one perspective at a time
@@ -614,6 +622,51 @@ body.inner-view #sidebar { display: none !important; }
             var h = (location.hash || '').replace(/^#/, '');
             if (!h) return null;
             try { return decodeURIComponent(h); } catch (e) { return h; }
+        }
+
+        // Intercept clicks on file:/// links (autolinked by __md, or
+        // written as [x](file:///...)). The browser blocks file:/// from
+        // http:// pages, so route them through the local server.
+        (function () {
+            document.addEventListener('click', function (e) {
+                var a = e.target && e.target.closest ? e.target.closest('a') : null;
+                if (!a) return;
+                var href = a.getAttribute('href') || '';
+                var filePath = a.getAttribute('data-file') || '';
+                if (href.indexOf('file:///') === 0) filePath = href;
+                if (!filePath || filePath.indexOf('file:///') !== 0) return;
+                e.preventDefault();
+                e.stopPropagation();
+                // file:///C:/Users/... -> C:/Users/...
+                var p = decodeURIComponent(filePath.replace(/^file:\/\//, ''));
+                fetch('/telegram/open', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ path: p })
+                }).then(function (r) {
+                    if (!r.ok) {
+                        console.warn('[open] failed', r.status, p);
+                    }
+                }).catch(function (err) {
+                    console.warn('[open] error', err);
+                });
+            }, true);
+        })();
+
+        // Any code that opens a context menu must call this first. Removes
+        // every previously opened menu, regardless of which factory made it.
+        function __closeAllCtxMenus() {
+            var nodes = document.querySelectorAll(
+                '.ctx-menu, #__ctxMenu, [data-ctx-menu="1"]'
+            );
+            for (var i = 0; i < nodes.length; i++) {
+                nodes[i].classList.remove('open');
+                // Menus created by showFeedRowMenu / showPostMenu are
+                // appended to <body> as standalone nodes. Remove them.
+                if (nodes[i].getAttribute('data-ctx-menu') === '1') {
+                    nodes[i].remove();
+                }
+            }
         }
 
 
@@ -656,6 +709,27 @@ body.inner-view #sidebar { display: none !important; }
                 ],
             },
         };
+
+        // Frozen default persona. New chats must start from this, NOT from
+        // whatever `state.people` happens to hold (that is the last opened
+        // chat's persona). Use __defaultOther() anywhere a fresh chat row
+        // or fresh blob is created.
+        var __DEFAULT_OTHER = {
+            name: 'Liza',
+            emoji: '👤',
+            avatarColor: '#3a5a2b',
+            myMsgColor: '#2b5278',
+            theirMsgColor: '#2b3b4a'
+        };
+        function __defaultOther() {
+            return {
+                name: __DEFAULT_OTHER.name,
+                emoji: __DEFAULT_OTHER.emoji,
+                avatarColor: __DEFAULT_OTHER.avatarColor,
+                myMsgColor: __DEFAULT_OTHER.myMsgColor,
+                theirMsgColor: __DEFAULT_OTHER.theirMsgColor
+            };
+        }
 
         // ---- DOM refs ----
         var msgs         = document.getElementById('msgs');
@@ -791,6 +865,8 @@ function __readerPlayRemaining() {
             saveState();
             return;
         }
+
+        // (markers are inline; the line below plays with marker stripped)
         var line = all[state.scriptIndex];
         var d = getDelaySimple(line, state.wpm);
         addMsgSilent(line, 'other', d);
@@ -820,6 +896,8 @@ function sendBotMessage() {
                        .filter(function (s) { return s; });
         }
         function __join(arr) { return joinBySeparator(arr, '\n---\n'); }
+        var __lastGo = null;
+        var __lastGo = null;
 
         // PATCH #25/#FOCUS: silent feedback via placeholder.
         // Always return focus to the main textbox after commands/formatting.
@@ -906,6 +984,7 @@ function sendBotMessage() {
                     '  /chat pdf       unwrap PDF-paste line breaks',
                     '',
                     'play',
+                    '  /go "text"   jump to first message containing text',
                     '  /play       play the loaded script; replay the chat',
                     '  /stop       stop playback',
                     '  /cpm N      set script speed to N characters per minute',
@@ -939,6 +1018,34 @@ function sendBotMessage() {
                 return true;
             }
 
+            if (cmd === '/go') {
+                var rawArg = (line.slice(cmd.length) || '').trim();
+                if (!rawArg) {
+                    if (!__lastGo) { __ph('no last search'); return true; }
+                    rawArg = __lastGo;
+                }
+                if (rawArg.length >= 2 &&
+                    ((rawArg[0] === '"' && rawArg[rawArg.length-1] === '"') ||
+                     (rawArg[0] === "'" && rawArg[rawArg.length-1] === "'"))) {
+                    rawArg = rawArg.slice(1, -1);
+                }
+                var allGo = __blocks(state.script || '');
+                var needle = rawArg.toLowerCase();
+                var target = -1;
+                for (var gi = 0; gi < allGo.length; gi++) {
+                    if (allGo[gi].toLowerCase().indexOf(needle) !== -1) { target = gi; break; }
+                }
+                if (target === -1) { __ph('no match: ' + rawArg); return true; }
+                state.scriptIndex = target;
+                __lastGo = rawArg;
+                saveState();
+                __ph('at "' + rawArg + '" (' + target + '/' + allGo.length + ')');
+                return true;
+            }
+
+            
+            
+            
             if (cmd === '/chat') {
                 var chatOps = args.slice();
                 var chatIndex = 0;
@@ -1110,57 +1217,9 @@ function sendBotMessage() {
                         var punctBlocks = __blocks(state.script || '');
 
                         for (var pbi = 0; pbi < punctBlocks.length; pbi++) {
-                            var punctSrc = punctBlocks[pbi];
-                            var punctBuf = '';
-
-                            for (var pi = 0; pi < punctSrc.length; pi++) {
-                                var punctCh = punctSrc[pi];
-
-                                if (/\p{P}/u.test(punctCh)) {
-                                    var punctPrev = pi > 0
-                                        ? punctSrc[pi - 1]
-                                        : '';
-
-                                    var punctNext = pi + 1 < punctSrc.length
-                                        ? punctSrc[pi + 1]
-                                        : '';
-
-                                    // Punctuation surrounded by letters
-                                    // belongs inside the same message.
-                                    if (
-                                        /\p{L}/u.test(punctPrev) &&
-                                        /\p{L}/u.test(punctNext)
-                                    ) {
-                                        punctBuf += punctCh;
-                                        continue;
-                                    }
-
-                                    // Normal punctuation ends the message,
-                                    // but stays attached to that message.
-                                    punctBuf += punctCh;
-
-                                    if (punctBuf.trim()) {
-                                        punctOut.push(punctBuf.trim());
-                                    }
-
-                                    punctBuf = '';
-
-                                    // Ignore whitespace immediately after
-                                    // punctuation so it doesn't become a
-                                    // separate message.
-                                    while (
-                                        pi + 1 < punctSrc.length &&
-                                        /\s/u.test(punctSrc[pi + 1])
-                                    ) {
-                                        pi++;
-                                    }
-                                } else {
-                                    punctBuf += punctCh;
-                                }
-                            }
-
-                            if (punctBuf.trim()) {
-                                punctOut.push(punctBuf.trim());
+                            var parts = splitPunct(punctBlocks[pbi], { strip: true });
+                            for (var pi = 0; pi < parts.length; pi++) {
+                                if (parts[pi]) punctOut.push(parts[pi]);
                             }
                         }
 
@@ -1226,6 +1285,17 @@ __ph('unknown command: ' + cmd);
 
         function handleSend() {
             var raw = ownInput.value;
+
+            // Any send clears whatever transient placeholder was set by a
+            // command (e.g. /go). Restore the canonical one first; the
+            // send paths below may overwrite it again with a fresh hint.
+            function __resetPlaceholder() {
+                ownInput.placeholder = 'Message as ' +
+                    state.people[state.currentPerspective].name + '…';
+            }
+            if (ownInput.placeholder && ownInput.placeholder.indexOf('Message as ') !== 0) {
+                __resetPlaceholder();
+            }
 
             // BOT EDITOR: /bot armed. Save --- separated replies.
             if (state.awaitingBot) {
@@ -1524,13 +1594,11 @@ __ph('unknown command: ' + cmd);
                         emoji: __emoji,
                         avatarColor: __color,
                         preview: __lastClean,
-                        lastLen: arr.length
+                        lastLen: arr.length,
+                        // Any save is a "bump": this chat rises to the top of
+                        // the feed. No change-detection.
+                        updatedAt: Date.now()
                     };
-                    if (__msgsChanged || !__feed) {
-                        __touch.updatedAt = Date.now();
-                    } else if (__feed) {
-                        __touch.updatedAt = __feed.updatedAt || 0;
-                    }
                     upsertFeedEntry(__touch);
                 } catch (e) {}
 
@@ -1551,21 +1619,24 @@ __ph('unknown command: ' + cmd);
                         answers: state.bot.answers,
                     },
                 };
-                saveAppState(STORE_KEY, __blob);
+                // Disk is truth on local; pSave handles the choice.
                 pSave('telegram', STORE_KEY, 'chats/' + CHAT_ID + '.json', __blob);
+                if (typeof renderUnifiedFeed === 'function') renderUnifiedFeed();
             } catch (e) {}
         }
 
-        function loadState() {
-            var d = loadAppState(STORE_KEY);
-            if (!d) {
-                pLoad('telegram', STORE_KEY, 'chats/' + CHAT_ID + '.json').then(function (fileBlob) {
-                    if (!fileBlob) return;
-                    try { localStorage.setItem(STORE_KEY, JSON.stringify(fileBlob)); } catch (e) {}
-                    loadState();
-                });
-                return false;
-            }
+        function loadState(onDone) {
+            // Always fetch through pLoad. In local mode, that's the disk
+            // file; on Pages, it's localStorage. No caching in between.
+            pLoad('telegram', STORE_KEY, 'chats/' + CHAT_ID + '.json').then(function (d) {
+                if (!d) { if (typeof onDone === 'function') onDone(false); return; }
+                __applyStateBlob(d);
+                if (typeof onDone === 'function') onDone(true);
+            });
+            return false;
+        }
+
+        function __applyStateBlob(d) {
 
             if (d.people && d.people.own && d.people.other) {
                 state.people = d.people;
@@ -1611,6 +1682,10 @@ if (d.currentPerspective === 'own' || d.currentPerspective === 'other') {
                 window.__resumeAutoPlay = d.autoPlay;
             }
             refreshBubbles();
+            // Header, avatar, placeholder must follow the loaded people
+            // and perspective. Without this, openChat paints defaults
+            // (Liza) and never repaints after the blob lands.
+            updateModeUI();
             return true;
         }
 
@@ -1640,29 +1715,8 @@ if (d.currentPerspective === 'own' || d.currentPerspective === 'other') {
         var __commandHistoryIndex = -1;
         var __commandHistoryDraft = '';
 
-        try {
-            var __savedCommandHistory =
-                JSON.parse(localStorage.getItem(__commandHistoryKey) || '[]');
-
-            if (Array.isArray(__savedCommandHistory)) {
-                __commandHistory = __savedCommandHistory
-                    .filter(function (s) {
-                        return typeof s === 'string' && s.trim();
-                    })
-                    .slice(-100);
-            }
-        } catch (e) {
-            __commandHistory = [];
-        }
-
-        function __saveCommandHistory() {
-            try {
-                localStorage.setItem(
-                    __commandHistoryKey,
-                    JSON.stringify(__commandHistory.slice(-100))
-                );
-            } catch (e) {}
-        }
+        // Command history is per page load only.
+        function __saveCommandHistory() {}
 
         function __rememberCommand(command) {
             command = (command || '').trim();
@@ -2145,88 +2199,44 @@ if (d.currentPerspective === 'own' || d.currentPerspective === 'other') {
         // ============================================================
         var FEED_KEY = 'tg_feed_v1';
 
+        // In-memory cache, refreshed from disk on boot. Nothing persists
+        // across reload on the client; feed.json on disk is the store.
+        var __FEED_CACHE = [];
+
         function loadFeed() {
-            var arr = loadAppState(FEED_KEY);
-            if (Array.isArray(arr)) return arr;
-            pLoad('telegram', FEED_KEY, 'feed.json').then(function (fileArr) {
-                if (Array.isArray(fileArr)) {
-                    try { localStorage.setItem(FEED_KEY, JSON.stringify(fileArr)); } catch (e) {}
-                    if (typeof renderFeed === 'function') renderFeed();
-                }
-            });
-            return [];
+            return Array.isArray(__FEED_CACHE) ? __FEED_CACHE : [];
         }
+
         function saveFeed(arr) {
             arr = arr || [];
-            saveAppState(FEED_KEY, arr);
+            __FEED_CACHE = arr;
             pSave('telegram', FEED_KEY, 'feed.json', arr);
+        }
+
+        // One-shot boot sync: fetch feed.json from the server, merge rows
+        // whose ids aren't in localStorage, pull in each new chat's blob.
+        function syncFeedFromDisk(onDone) {
+            var host = location.hostname;
+            var isLocal = (host === 'localhost' || host === '127.0.0.1'
+                        || host === '' || host === '0.0.0.0');
+            if (!isLocal) { if (onDone) onDone(); return; }
+
+            fetch('/data/telegram/feed.json', { cache: 'no-store' })
+              .then(function (r) { return r.ok ? r.json() : null; })
+              .then(function (fileArr) {
+                  __FEED_CACHE = Array.isArray(fileArr) ? fileArr : [];
+                  if (typeof renderFeed === 'function') renderFeed();
+                  if (typeof renderUnifiedFeed === 'function') renderUnifiedFeed();
+                  if (onDone) onDone();
+              })
+              .catch(function () { if (onDone) onDone(); });
         }
 
         // Seed from any existing chat_rp_v1_* keys.
         // Also: if the legacy 'default' chat exists and has no feed
         // entry, promote it to a generated id so it has a real URL.
-        function seedFeedFromStorage() {
-            var feed = loadFeed();
-            var have = {};
-            feed.forEach(function (f) { have[f.id] = true; });
-
-            // Promote legacy 'default' -> generated id, if present.
-            try {
-                var legacyRaw = localStorage.getItem('chat_rp_v1_default');
-                if (legacyRaw && !have['default']) {
-                    var genId = 'c' + Date.now();
-                    localStorage.setItem('chat_rp_v1_' + genId, legacyRaw);
-                    localStorage.removeItem('chat_rp_v1_default');
-                    feed.push({
-                        id: genId,
-                        title: 'Alex',
-                        emoji: '👤',
-                        avatarColor: '#2b5278',
-                        updatedAt: Date.now(),
-                        preview: ''
-                    });
-                    have[genId] = true;
-                }
-            } catch (e) {}
-
-            var added = false;
-            for (var i = 0; i < localStorage.length; i++) {
-                var k = localStorage.key(i);
-                if (!k || k.indexOf('chat_rp_v1_') !== 0) continue;
-                var id = k.slice('chat_rp_v1_'.length);
-                if (have[id]) continue;
-                feed.push({
-                    id: id,
-                    title: id,
-                    emoji: '👤',
-                    avatarColor: '#2b5278',
-                    updatedAt: 0,
-                    preview: ''
-                });
-                have[id] = true;
-                added = true;
-            }
-
-            // If still empty, create a real default chat with a unique id.
-            // Title/emoji/color come from the OTHER persona — the person
-            // you're talking TO. This matches what the chat header shows.
-            if (feed.length === 0) {
-                var id0 = 'c' + Date.now();
-                var __defOther = (state && state.people && state.people.other) || {};
-                feed.push({
-                    id: id0,
-                    title: (__defOther.name || 'Liza'),
-                    emoji: (__defOther.emoji || '👤'),
-                    avatarColor: (__defOther.avatarColor || '#3a5a2b'),
-                    updatedAt: Date.now(),
-                    preview: ''
-                });
-                added = true;
-            }
-
-            if (added || feed.length !== Object.keys(have).length) saveFeed(feed);
-            return feed;
-        }
+        // seeding from localStorage is dead. Nothing to migrate.
+        function seedFeedFromStorage() { return loadFeed(); }
 
         function findFeedEntry(id) {
             var feed = loadFeed();
@@ -2250,15 +2260,8 @@ if (d.currentPerspective === 'own' || d.currentPerspective === 'other') {
 
         // Preview = last message's raw text.
         function chatPreview(id) {
-            try {
-                var raw = localStorage.getItem('chat_rp_v1_' + id);
-                if (!raw) return '';
-                var d = JSON.parse(raw);
-                var msgs = d && d.msgs;
-                if (!msgs || !msgs.length) return '';
-                var last = msgs[msgs.length - 1];
-                return String(last.t || '').replace(/\s+/g, ' ').slice(0, 80);
-            } catch (e) { return ''; }
+            var f = findFeedEntry(id);
+            return (f && f.preview) ? String(f.preview) : '';
         }
 
         // Build a row. opts: {avatar, title, preview, onClick, onDelete}
@@ -2320,6 +2323,7 @@ if (d.currentPerspective === 'own' || d.currentPerspective === 'other') {
                     if (ev.key === 'Escape') menu.classList.remove('open');
                 });
             }
+            __closeAllCtxMenus();
             menu.innerHTML = '<button class="ctx-item" data-act="delete">Delete chat</button>';
             menu.classList.add('open');
             menu.style.left = '0px';
@@ -2344,13 +2348,12 @@ if (d.currentPerspective === 'own' || d.currentPerspective === 'other') {
 
         function __newChat() {
             var id = 'c' + Date.now();
-            // Use the default OTHER-side persona for the initial feed label.
-            var __defOther = (state && state.people && state.people.other) || {};
+            var __defOther = __defaultOther();
             upsertFeedEntry({
                 id: id,
-                title: (__defOther.name || 'Liza'),
-                emoji: (__defOther.emoji || '👤'),
-                avatarColor: (__defOther.avatarColor || '#3a5a2b'),
+                title: __defOther.name,
+                emoji: __defOther.emoji,
+                avatarColor: __defOther.avatarColor,
                 updatedAt: Date.now(),
                 preview: '',
                 lastLen: -1
@@ -2411,9 +2414,11 @@ if (d.currentPerspective === 'own' || d.currentPerspective === 'other') {
                     onDelete: function () {
                         if (!confirm('Delete chat "' + (entry.title || entry.id) + '"?')) return;
                         deleteFeedEntry(entry.id);
-                        try { localStorage.removeItem('chat_rp_v1_' + entry.id); } catch (err) {}
-                        pDelete('telegram', 'chat_rp_v1_' + entry.id, 'chats/' + entry.id + '.json');
-                        renderFeed();
+                        pDelete('telegram', 'chat_rp_v1_' + entry.id, 'chats/' + entry.id + '.json')
+                          .then(function () {
+                              if (typeof renderUnifiedFeed === 'function') renderUnifiedFeed();
+                              renderFeed();
+                          });
                     }
                 }));
             });
@@ -2448,6 +2453,10 @@ if (d.currentPerspective === 'own' || d.currentPerspective === 'other') {
                 if (window.__tgcRoute) { window.__tgcRoute(); return; }
                 showFeed(); return;
             }
+            // Hashes owned by the merged router are not chat ids.
+            if (id.indexOf('c/') === 0 || id.indexOf('f/') === 0) {
+                return;
+            }
             if (window.__bootedFor === id) { showChat(id); return; }
             openChat(id);
         });
@@ -2458,19 +2467,22 @@ if (d.currentPerspective === 'own' || d.currentPerspective === 'other') {
             CHAT_ID = id;
             STORE_KEY = 'chat_rp_v1_' + CHAT_ID;
             window.__bootedFor = CHAT_ID;
+            // clear previous chat's DOM before loading this one
+            msgs.innerHTML = '';
             var __cv = document.getElementById('chatView');
             if (__cv) __cv.classList.remove('ready');
             // Ensure feed has an entry for this chat.
             // Title/emoji/color: the other persona (the one you talk to).
             if (!findFeedEntry(CHAT_ID)) {
-                var __defOther2 = (state && state.people && state.people.other) || {};
+                var __defOther2 = __defaultOther();
                 upsertFeedEntry({
                     id: CHAT_ID,
-                    title: (__defOther2.name || CHAT_ID),
-                    emoji: (__defOther2.emoji || '👤'),
-                    avatarColor: (__defOther2.avatarColor || '#2b5278'),
+                    title: __defOther2.name,
+                    emoji: __defOther2.emoji,
+                    avatarColor: __defOther2.avatarColor,
                     updatedAt: Date.now(),
-                    preview: ''
+                    preview: '',
+                    lastLen: -1
                 });
             }
             document.getElementById('feedView').style.display = 'none';
@@ -2497,6 +2509,7 @@ if (d.currentPerspective === 'own' || d.currentPerspective === 'other') {
                 function close() { menu.classList.remove('open'); }
 
                 function open(anchorEl) {
+                    __closeAllCtxMenus();
                     var r = anchorEl.getBoundingClientRect();
                     menu.classList.add('open');
                     // measure
@@ -2552,23 +2565,72 @@ if (d.currentPerspective === 'own' || d.currentPerspective === 'other') {
             })();
 
             // Build menu AFTER loadState so state.mode is final.
-            loadState();
+            //
+            // Paint the chat only after the blob has been applied. Otherwise
+            // the first frame uses default people/perspective and then
+            // visibly jerks when the real data lands.
+            //
+            // Bounce rules:
+            //   * new id (no feed row yet)  -> file is legitimately absent
+            //     until the first save; keep the chat open.
+            //   * existing feed row, 404    -> row is stale; bounce to feed.
+            // A row we just created in this same call has no file on disk
+            // yet. Don't treat that as a stale row; only bounce if the row
+            // pre-existed AND had real history (lastLen >= 0).
+            var __rowBefore = findFeedEntry(CHAT_ID);
+            var __wasReal = !!(__rowBefore && typeof __rowBefore.lastLen === 'number' && __rowBefore.lastLen >= 0);
+            loadState(function (found) {
+                if (window.__bootedFor !== CHAT_ID) return; // a newer chat won
+                if (!found && __wasReal) {
+                    location.hash = '';
+                    if (typeof showFeed === 'function') showFeed();
+                    return;
+                }
+                if (!found) {
+                    // Fresh chat, no file on disk. Reset both sides to
+                    // defaults, then adopt the feed row's label as the
+                    // other persona so header == row.
+                    state.people = {
+                        own:   { name: 'Alex', emoji: '🙂', avatarColor: '#2b5278',
+                                 myMsgColor: '#2b5278', theirMsgColor: '#2b3b4a' },
+                        other: __defaultOther()
+                    };
+                    var __row = findFeedEntry(CHAT_ID);
+                    if (__row && __row.title) {
+                        state.people.other.name = __row.title;
+                        if (__row.emoji)       state.people.other.emoji = __row.emoji;
+                        if (__row.avatarColor) state.people.other.avatarColor = __row.avatarColor;
+                    }
+                }
+                afterOpenChatPaint();
+            });
+
+            // Do NOT show the chat or paint the header here. Show the
+            // view only from afterOpenChatPaint() once the persona and
+            // messages are final, so there is no wrong-then-right frame.
+            // showChat() covers the "re-click same row" case.
             // perspective toggle: always available
             var _av = document.getElementById('avatar');
             if (_av) _av.style.cursor = 'pointer';
             if (_av) _av.addEventListener('click', function () { togglePerspective(); });
-            document.addEventListener('keydown', function (e) {
-                if (e.altKey && e.code === 'KeyM') {
-                    e.preventDefault();
-                    togglePerspective();
-                }
-            });
-            applyFontSize(msgs, state.fontSize);
-            updateModeUI();      // also refreshes all msg styles
+            if (!window.__altMWired) {
+                window.__altMWired = true;
+                document.addEventListener('keydown', function (e) {
+                    if (e.altKey && e.code === 'KeyM') {
+                        e.preventDefault();
+                        togglePerspective();
+                    }
+                });
+            }
+        }
 
-            // Refresh the feed entry once at boot so its title/emoji/color
-            // reflect the current people + perspective (even before any message).
-            try { saveState(); } catch (e) {}
+        // Runs once loadState has resolved and the blob is applied.
+        // Everything that paints the chat and wires one-time modals
+        // belongs here so the first visible frame already has the
+        // loaded people, perspective, colors and messages.
+        function afterOpenChatPaint() {
+            applyFontSize(msgs, state.fontSize);
+            updateModeUI();
 
             // PATCH #49: restore /text view after reload.
             if (state.awaitingText) {
@@ -2579,7 +2641,6 @@ if (d.currentPerspective === 'own' || d.currentPerspective === 'other') {
                 ownInput.scrollTop = 0;
             }
 
-            
             if (window.__resumeAutoPlay) {
                 autoPlay.resume(window.__resumeAutoPlay);
                 window.__resumeAutoPlay = null;
@@ -2598,8 +2659,6 @@ if (d.currentPerspective === 'own' || d.currentPerspective === 'other') {
             }, 100);
 
             try {
-                // Initial/reload hint only.
-                // Do not overwrite command feedback placeholders.
                 if (!ownInput.placeholder || ownInput.placeholder === 'Message as Alex…') {
                     ownInput.placeholder = '/help';
                 }
@@ -2613,12 +2672,16 @@ if (d.currentPerspective === 'own' || d.currentPerspective === 'other') {
 
         function boot() {
             var __id = __hashId();
-            if (!__id) {
-                seedFeedFromStorage();
-                // TGC owns the empty-hash view. Do not paint RP's feed.
-                return;
-            }
-            openChat(__id);
+            syncFeedFromDisk(function () {
+                if (!__id) {
+                    seedFeedFromStorage();
+                    // TGC owns the empty-hash view. Do not paint RP's feed.
+                    return;
+                }
+                // c/ and f/ hashes belong to the merged router.
+                if (__id.indexOf('c/') === 0 || __id.indexOf('f/') === 0) return;
+                openChat(__id);
+            });
         }
 
         if (document.readyState === 'loading') {
@@ -2748,7 +2811,8 @@ if (d.currentPerspective === 'own' || d.currentPerspective === 'other') {
     function flush() {
       if (cur && cur.id) out.push({
         id: cur.id, name: cur.name || cur.id,
-        icon: cur.icon || '📁', color: cur.color || null
+        icon: cur.icon || '📁', color: cur.color || null,
+        slug: cur.slug || null
       });
       cur = null;
     }
@@ -2764,6 +2828,7 @@ if (d.currentPerspective === 'own' || d.currentPerspective === 'other') {
       if (k === 'name') cur.name = v;
       else if (k === 'icon') cur.icon = v;
       else if (k === 'color') cur.color = v || null;
+      else if (k === 'slug') cur.slug = v || null;
     }
     flush();
     var SYS = { all:1, unfold:1, archived:1 };
@@ -2790,6 +2855,7 @@ if (d.currentPerspective === 'own' || d.currentPerspective === 'other') {
     var out = ['---','folders:'];
     user.forEach(function (f) {
       out.push('  - id: ' + yamlQuote(f.id));
+      if (f.slug) out.push('    slug: ' + yamlQuote(f.slug));
       out.push('    name: ' + yamlQuote(f.name || f.id));
       out.push('    icon: ' + yamlQuote(f.icon || '📁'));
       if (f.color) out.push('    color: ' + yamlQuote(f.color));
@@ -2827,6 +2893,9 @@ if (d.currentPerspective === 'own' || d.currentPerspective === 'other') {
           k === 'desc' || k === 'avatarColor' || k === 'color' ||
           k === 'avatar' || k === 'pinned') {
         meta[k] = v;
+      } else if (k === 'updatedAt') {
+        var n = parseInt(v, 10);
+        if (isFinite(n)) meta.updatedAt = n;
       } else if (k === 'archived') {
         meta.archived = (v === 'true' || v === '1' || v === 'yes');
       }
@@ -2839,6 +2908,7 @@ if (d.currentPerspective === 'own' || d.currentPerspective === 'other') {
     var out = ['---'];
     if (ch.id) out.push('id: ' + yamlQuote(ch.id));
     if (ch.title) out.push('title: ' + yamlQuote(ch.title));
+    if (typeof ch.updatedAt === 'number') out.push('updatedAt: ' + ch.updatedAt);
     if (ch.slug) out.push('slug: ' + yamlQuote(ch.slug));
     if (ch.emoji) out.push('emoji: ' + yamlQuote(ch.emoji));
     if (ch.avatarColor) out.push('avatarColor: ' + yamlQuote(ch.avatarColor));
@@ -2924,6 +2994,7 @@ if (d.currentPerspective === 'own' || d.currentPerspective === 'other') {
         desc: meta.desc || '',
         pinned: meta.pinned || '',
         archived: !!meta.archived,
+        updatedAt: (typeof meta.updatedAt === 'number') ? meta.updatedAt : 0,
         folderIds: folderIds,
         posts: posts,
       };
@@ -2994,7 +3065,15 @@ if (d.currentPerspective === 'own' || d.currentPerspective === 'other') {
   function saveChannelPost(ch, post) {
     writeBundle(currentBundle());
     var rel = channelDir(ch) + '/' + post.number + '.md';
+    ch.updatedAt = Date.now();
     return apiWriteText(rel, (post.body || '') + '\n')
+      .then(function () {
+        // Persist the bump into meta.md so it survives reload.
+        return saveChannelMeta(ch);
+      })
+      .then(function () {
+        if (typeof renderUnifiedFeed === 'function') renderUnifiedFeed();
+      })
       .catch(function (e) { /* no server, fine */ });
   }
   function deleteChannelPost(ch, number) {
@@ -3051,30 +3130,37 @@ if (d.currentPerspective === 'own' || d.currentPerspective === 'other') {
     TGC.activeFolderId = id || 'all';
     renderSidebar();
     renderUnifiedFeed();
+    // Remember the folder in the hash. 'all' clears it, so the default
+    // empty-hash route already renders All.
+    var want = (TGC.activeFolderId === 'all')
+      ? ''
+      : '#f/' + encodeURIComponent(TGC.activeFolderId);
+    if ((location.hash || '') !== want) {
+      // avoid re-triggering route() in a loop: only set when different
+      location.hash = want;
+    }
   }
 
   // =========================================================================
   // UNIFIED FEED
   // =========================================================================
   function chatList() {
-    // reuse RP chat's localStorage feed
+    // The RP chat's in-memory feed cache. Refreshed from disk on boot by
+    // syncFeedFromDisk(). Nothing client-side persists.
     try {
-      var raw = localStorage.getItem('tg_feed_v1');
-      var arr = raw ? JSON.parse(raw) : null;
-      if (Array.isArray(arr)) return arr;
+      if (typeof loadFeed === 'function') {
+        var arr = loadFeed();
+        if (Array.isArray(arr)) return arr;
+      }
     } catch (e) {}
     return [];
   }
   function chatPreview(id) {
-    try {
-      var raw = localStorage.getItem('chat_rp_v1_' + id);
-      if (!raw) return '';
-      var d = JSON.parse(raw);
-      var msgs = d && d.msgs;
-      if (!msgs || !msgs.length) return '';
-      var last = msgs[msgs.length - 1];
-      return String(last.t || '').replace(/\s+/g,' ').slice(0,80);
-    } catch (e) { return ''; }
+    var arr = chatList();
+    for (var i = 0; i < arr.length; i++) {
+      if (arr[i].id === id) return String(arr[i].preview || '');
+    }
+    return '';
   }
 
   function userFolderIds() {
@@ -3258,7 +3344,9 @@ if (d.currentPerspective === 'own' || d.currentPerspective === 'other') {
   }
 
   function showFeedRowMenu(e, kind, item) {
+    __closeAllCtxMenus();
     var menu = document.createElement('div');
+    menu.setAttribute('data-ctx-menu', '1');
     menu.style.cssText =
       'position:fixed;background:#17212b;border:1px solid #22303d;z-index:3000;' +
       'padding:4px;min-width:180px;box-shadow:0 8px 32px rgba(0,0,0,.55);';
@@ -3285,13 +3373,11 @@ if (d.currentPerspective === 'own' || d.currentPerspective === 'other') {
         if (act === 'archive') {
           item.archived = !item.archived;
           if (kind === 'chat') {
-            try {
-              var arr = chatList().map(function (c) {
-                if (c.id === item.id) c.archived = item.archived;
-                return c;
-              });
-              localStorage.setItem('tg_feed_v1', JSON.stringify(arr));
-            } catch (err) {}
+            var arr = chatList().map(function (c) {
+              if (c.id === item.id) c.archived = item.archived;
+              return c;
+            });
+            saveFeed(arr);
             renderUnifiedFeed();
           } else {
             saveChannelMeta(item).then(renderUnifiedFeed);
@@ -3301,12 +3387,10 @@ if (d.currentPerspective === 'own' || d.currentPerspective === 'other') {
         } else if (act === 'delete') {
           if (kind === 'chat') {
             if (!confirm('Delete chat "' + (item.title || item.id) + '"?')) return;
-            try {
-              var arr2 = chatList().filter(function (c) { return c.id !== item.id; });
-              localStorage.setItem('tg_feed_v1', JSON.stringify(arr2));
-              localStorage.removeItem('chat_rp_v1_' + item.id);
-            } catch (err) {}
-            renderUnifiedFeed();
+            var __arr2 = chatList().filter(function (c) { return c.id !== item.id; });
+            saveFeed(__arr2);
+            pDelete('telegram', 'chat_rp_v1_' + item.id, 'chats/' + item.id + '.json')
+              .then(renderUnifiedFeed);
           } else {
             if (!confirm('Delete channel "' + (item.title || item.slug) + '"?')) return;
             apiDelete(channelDir(item) + '/').then(function () {
@@ -3359,13 +3443,11 @@ if (d.currentPerspective === 'own' || d.currentPerspective === 'other') {
       item.folderIds = picked;
       close();
       if (kind === 'chat') {
-        try {
-          var arr = chatList().map(function (c) {
-            if (c.id === item.id) c.folderIds = picked;
-            return c;
-          });
-          localStorage.setItem('tg_feed_v1', JSON.stringify(arr));
-        } catch (e) {}
+        var arr = chatList().map(function (c) {
+          if (c.id === item.id) c.folderIds = picked;
+          return c;
+        });
+        saveFeed(arr);
         renderUnifiedFeed();
       } else {
         saveChannelMeta(item).then(renderUnifiedFeed);
@@ -3384,17 +3466,22 @@ if (d.currentPerspective === 'own' || d.currentPerspective === 'other') {
 
   function createChat() {
     closeChooser();
-    // reuse RP chat logic: it expects hash to change -> reload
+    // Seed from the frozen default persona, not from whatever chat was
+    // last open (state.people is stale across chats).
     var id = 'c' + Date.now();
-    try {
-      var arr = chatList();
-      arr.push({
-        id: id, title: 'Chat ' + id.slice(-4),
-        emoji: '👤', avatarColor: '#2b5278',
-        updatedAt: Date.now(), preview: ''
-      });
-      localStorage.setItem('tg_feed_v1', JSON.stringify(arr));
-    } catch (e) {}
+    var arr = chatList();
+    var __defOther = (typeof __defaultOther === 'function') ? __defaultOther()
+                    : { name: 'Liza', emoji: '👤', avatarColor: '#3a5a2b' };
+    arr.push({
+      id: id,
+      title: __defOther.name,
+      emoji: __defOther.emoji,
+      avatarColor: __defOther.avatarColor,
+      updatedAt: Date.now(),
+      preview: '',
+      lastLen: -1
+    });
+    saveFeed(arr);
     location.hash = '#' + encodeURIComponent(id);
   }
   function createChannel() {
@@ -3535,19 +3622,17 @@ if (d.currentPerspective === 'own' || d.currentPerspective === 'other') {
         else pickedChans.push(id);
       });
 
-      // chats -> update tg_feed_v1
-      try {
-        var feedArr = chatList().map(function (c) {
-          var on = pickedChats.indexOf(c.id) !== -1;
-          var fids = Array.isArray(c.folderIds) ? c.folderIds.slice() : ['all'];
-          var has = fids.indexOf(f.id) !== -1;
-          if (on && !has) fids.push(f.id);
-          if (!on && has) fids = fids.filter(function (x) { return x !== f.id; });
-          c.folderIds = fids;
-          return c;
-        });
-        localStorage.setItem('tg_feed_v1', JSON.stringify(feedArr));
-      } catch (e) {}
+      // chats -> update feed.json
+      var feedArr = chatList().map(function (c) {
+        var on = pickedChats.indexOf(c.id) !== -1;
+        var fids = Array.isArray(c.folderIds) ? c.folderIds.slice() : ['all'];
+        var has = fids.indexOf(f.id) !== -1;
+        if (on && !has) fids.push(f.id);
+        if (!on && has) fids = fids.filter(function (x) { return x !== f.id; });
+        c.folderIds = fids;
+        return c;
+      });
+      saveFeed(feedArr);
 
       // channels -> mutate folderIds and save meta
       TGC.channels.forEach(function (ch) {
@@ -3596,7 +3681,7 @@ if (d.currentPerspective === 'own' || d.currentPerspective === 'other') {
     } else {
       emojiHtml = escapeHtml(ch.emoji || '📢');
     }
-    var descHtml = ch.desc ? escapeHtml(ch.desc) : '';
+    var descHtml = ch.desc ? __md(ch.desc) : '';
     channelBioBox.innerHTML =
       '<div class="bio-emoji">' + emojiHtml + '</div>' +
       '<div class="bio-title">' + escapeHtml(ch.title || ch.slug) + '</div>' +
@@ -3711,17 +3796,25 @@ if (d.currentPerspective === 'own' || d.currentPerspective === 'other') {
       var desc = (channelModalEl.querySelector('#cm-desc').value || '').trim();
       var emoji = (channelModalEl.querySelector('#cm-emoji').value || '').trim();
 
-      var slug = slugRaw || slugify(title || ch.id);
+      // Fallbacks that don't leak the internal id.
+      var baseTitle = title || 'Channel';
+      var baseSlug  = slugRaw || slugify(title) || 'channel';
+      var slug = baseSlug;
+      // If the slug is taken by another channel, add a numeric suffix.
+      var n = 2;
+      while (TGC.channels.find(function (x) { return x.slug === slug && x.id !== ch.id; })) {
+        slug = baseSlug + '-' + n;
+        n++;
+        if (n > 999) { alert('Slug already used.'); return; }
+      }
       if (!/^[A-Za-z0-9_-]+$/.test(slug)) { alert('Bad slug.'); return; }
-      var clash = TGC.channels.find(function (x) { return x.slug === slug && x.id !== ch.id; });
-      if (clash) { alert('Slug already used.'); return; }
 
       var folderIds = ['all'];
       channelModalEl.querySelectorAll('#cm-folders input:checked').forEach(function (i) {
         folderIds.push(i.dataset.folderId);
       });
 
-      ch.title = title || ch.id;
+      ch.title = baseTitle;
       ch.slug = slug;
       ch.desc = desc;
       ch.emoji = emoji;
@@ -3733,9 +3826,8 @@ if (d.currentPerspective === 'own' || d.currentPerspective === 'other') {
       saveChannelMeta(ch).then(function () {
         channelOverlay.classList.remove('open');
         renderUnifiedFeed();
-        if (!isNew) {
-          location.hash = '#c/' + encodeURIComponent(ch.slug);
-        }
+        // Open the channel after save, new or existing.
+        location.hash = '#c/' + encodeURIComponent(ch.slug);
       });
     };
     var del = channelModalEl.querySelector('#cm-delete');
@@ -3865,12 +3957,20 @@ if (d.currentPerspective === 'own' || d.currentPerspective === 'other') {
 
         var bodyEl = document.createElement('span');
         bodyEl.className = 'post-body';
-        bodyEl.textContent = p.body || '';
+        // Posts are always authored by the channel, and they support the
+        // same markdown as chat messages. Links autolink via __md.
+        bodyEl.innerHTML = __md(p.body || '');
 
         el.appendChild(nameEl);
         el.appendChild(bodyEl);
 
         el.addEventListener('contextmenu', function (e) {
+          // Only open on the bubble background. Ignore right-clicks on
+          // links, on selected text, and inside interactive content.
+          var t = e.target;
+          if (t && t.closest && t.closest('a')) return;
+          var sel = window.getSelection && window.getSelection();
+          if (sel && !sel.isCollapsed && sel.toString().length) return;
           e.preventDefault(); e.stopPropagation();
           showPostMenu(e, ch, p);
         });
@@ -3895,7 +3995,9 @@ if (d.currentPerspective === 'own' || d.currentPerspective === 'other') {
   }
 
   function showPostMenu(e, ch, post) {
+    __closeAllCtxMenus();
     var menu = document.createElement('div');
+    menu.setAttribute('data-ctx-menu', '1');
     menu.style.cssText = 'position:fixed;background:#17212b;border:1px solid #22303d;z-index:3000;padding:4px;min-width:160px;box-shadow:0 8px 32px rgba(0,0,0,.55);';
     menu.innerHTML =
       '<button data-act="edit" style="display:block;width:100%;text-align:left;padding:8px 14px;background:transparent;border:none;color:#c8d1da;cursor:pointer;font-size:13px;font-family:inherit;">Edit</button>' +
@@ -3970,6 +4072,10 @@ if (d.currentPerspective === 'own' || d.currentPerspective === 'other') {
       channelInputEl.value = '';
       channelInputEl.style.height = '';
       renderChannelView();
+      // Focus the newly added post: scroll the list to the bottom.
+      requestAnimationFrame(function () {
+        channelPostsEl.scrollTop = channelPostsEl.scrollHeight;
+      });
     });
   }
 
@@ -3994,6 +4100,16 @@ if (d.currentPerspective === 'own' || d.currentPerspective === 'other') {
       var fid = decodeURIComponent(h.slice(2));
       closeChannelView();
       closeChatView();
+      // If the folder no longer exists, fall back to All (and clear hash).
+      var exists = TGC.folders.some(function (f) { return f.id === fid; });
+      if (!exists) {
+        TGC.activeFolderId = 'all';
+        location.hash = '';
+        renderSidebar();
+        showUnifiedFeed();
+        renderUnifiedFeed();
+        return;
+      }
       TGC.activeFolderId = fid;
       renderSidebar();
       showUnifiedFeed();
@@ -4008,6 +4124,8 @@ if (d.currentPerspective === 'own' || d.currentPerspective === 'other') {
       if (cv) cv.classList.remove('open');
       return;
     }
+    // (a hash of the form "c/..." that isn't a known channel has already
+    //  been cleared above; nothing else to do.)
     // empty hash -> unified feed
     closeChannelView();
     closeChatView();

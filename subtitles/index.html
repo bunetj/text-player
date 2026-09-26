@@ -22,12 +22,11 @@
             align-items: center;
         }
 
-        html, body { height: 100%; }
+        html, body { min-height: 100%; height: auto; overflow-y: auto; }
         .app {
             width: 100%;
             max-width: 640px;
-            height: 100vh;
-            max-height: 500px;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -137,7 +136,8 @@
         .menu-input-label input:focus { outline: 1px solid #7a7a7a; }
 
         .sub-wrap {
-            height: 100%;
+            flex: 0 0 432px;
+            height: 432px;
             background: #1c1c1c;
             border-radius: 16px;
             border: 1px solid #333333;
@@ -203,7 +203,7 @@
         .bottom-bar .bar-gear:hover { color: #e8edf2; }
 
         @media (max-width: 440px) {
-            .app { padding: 4px; max-height: 100vh; height: 100vh; }
+            .app { padding: 4px; min-height: 100vh; }
             .toolbar { padding: 4px 6px; gap: 2px; }
             .menu-section { padding: 0 2px; }
             .menu-label { font-size: 9px; display: none; }
@@ -346,7 +346,128 @@
             height: 4px;
             border-radius: 2px;
         }
-        .bottom-bar .bar-text {
+        .playlist-list {
+            max-height: 320px;
+            overflow-y: auto;
+            border-top: 1px solid #333333;
+        }
+        .playlist-row {
+            padding: 10px 16px;
+            font-size: 13px;
+            color: #c8d1da;
+            cursor: pointer;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            border-bottom: 1px solid #232323;
+        }
+        .playlist-row:last-child { border-bottom: none; }
+        .playlist-row:hover { background: #333333; }
+        .playlist-row.active { background: #2b5278; color: #fff; }
+
+
+        .playlist-block {
+            flex: 0 0 220px;
+            background: #1c1c1c;
+            border: 1px solid #333333;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .playlist-block .playlist-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            border-bottom: 1px solid #333333;
+            font-size: 12px;
+            color: #8e9aa5;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+        .playlist-block .playlist-new {
+            background: #262626;
+            color: #e8edf2;
+            border: none;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 13px;
+            text-align: left;
+            border-bottom: 1px solid #232323;
+        }
+        .playlist-block .playlist-new:hover { background: #333333; }
+
+        .playlist-block .playlist-row {
+            display: flex;
+            align-items: center;
+            padding: 0;
+            cursor: pointer;
+        }
+        .playlist-block .playlist-row-title {
+            flex: 1;
+            min-width: 0;
+            padding: 10px 12px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-size: 13px;
+            color: #c8d1da;
+        }
+        .playlist-block .playlist-row-x {
+            padding: 10px 14px;
+            font-size: 15px;
+            color: #8e9aa5;
+            cursor: pointer;
+        }
+        .playlist-block .playlist-row-x:hover { color: #e57373; }
+        .playlist-block .playlist-row.active .playlist-row-title {
+            background: #2b5278;
+            color: #fff;
+        }
+
+        /* bottom bar: ☰ far left, 📄 next to it, ▶ centered, ⚙ far right */
+        /* find bar: a plain line under the controls. No box. */
+        .find-bar {
+            display: none;
+            flex-shrink: 0;
+            align-items: center;
+            gap: 10px;
+            padding: 4px 12px 8px;
+        }
+        .find-bar.open { display: flex; }
+        .find-bar input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid #333333;
+            color: #e8edf2;
+            font-size: 13px;
+            font-family: inherit;
+            padding: 4px 2px;
+            outline: none;
+        }
+        .find-bar input::placeholder { color: #5e6f7e; }
+        .find-bar input:focus { border-bottom-color: #7a7a7a; }
+        .find-bar .find-status {
+            font-size: 11px;
+            color: #5e6f7e;
+            min-width: 40px;
+            text-align: right;
+        }
+        .bottom-bar .bar-find {
+            position: absolute;
+            left: 76px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 18px;
+            color: #8e9aa5;
+            background: transparent;
+            padding: 6px 10px;
+        }
+        .bottom-bar .bar-find:hover { color: #e8edf2; }
+
+        .bottom-bar .bar-pl {
             position: absolute;
             left: 6px;
             top: 50%;
@@ -356,8 +477,85 @@
             background: transparent;
             padding: 6px 10px;
         }
+        .bottom-bar .bar-pl:hover { color: #e8edf2; }
+        .bottom-bar .bar-text {
+            position: absolute;
+            left: 40px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 18px;
+            color: #8e9aa5;
+            background: transparent;
+            padding: 6px 10px;
+        }
         .bottom-bar .bar-text:hover { color: #e8edf2; }
-
+        .playlists-block {
+            flex: 0 0 auto;
+            max-height: 320px;
+            overflow-y: auto;
+            background: #141414;
+            border: 1px solid #333333;
+            padding: 12px;
+        }
+        .playlists-block .pl-block {
+            margin-bottom: 18px;
+            background: #181818;
+            border: 1px solid #2a2a2a;
+        }
+        .playlists-block .pl-block:last-child { margin-bottom: 0; }
+        .playlists-block .pl-head {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 10px 14px; font-size: 12px; color: #8e9aa5;
+            text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;
+            background: #222222;
+        }
+        .playlists-block .pl-head .pl-name {
+            flex: 1; min-width: 0; overflow: hidden;
+            text-overflow: ellipsis; white-space: nowrap;
+        }
+        .playlists-block .pl-head .pl-btn { padding: 0 8px; cursor: pointer; color: #8e9aa5; }
+        .playlists-block .pl-head .pl-btn:hover { color: #e8edf2; }
+        .playlists-block .pl-head .pl-btn.del:hover { color: #e57373; }
+        .playlists-block .pl-new {
+            background: #202020; color: #e8edf2; border: none;
+            padding: 10px 14px; cursor: pointer; font-size: 13px;
+            text-align: left; width: 100%;
+        }
+        .playlists-block .pl-new:hover { background: #333333; }
+        .playlists-block .pl-row {
+            display: flex; align-items: center; padding: 0; cursor: pointer;
+        }
+        .playlists-block .pl-row-title {
+            flex: 1; min-width: 0; padding: 12px 14px;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            font-size: 13px; color: #c8d1da;
+        }
+        .playlists-block .pl-row-play {
+            padding: 12px 8px 12px 12px;
+            font-size: 13px; color: #8e9aa5; cursor: pointer;
+            flex-shrink: 0;
+        }
+        .playlists-block .pl-row-play:hover { color: #e8edf2; }
+        .playlists-block .pl-row-x { padding: 12px 14px; font-size: 15px; color: #8e9aa5; cursor: pointer; }
+        .playlists-block .pl-row-ed { padding: 12px 8px; font-size: 14px; color: #8e9aa5; cursor: pointer; }
+        .playlists-block .pl-row-ed:hover { color: #e8edf2; }
+        .playlists-block .pl-row-x:hover { color: #e57373; }
+        /* selected row: lighter grey, extends across title + actions */
+        .playlists-block .pl-row.active {
+            background: #333333;
+        }
+        .playlists-block .pl-row.active .pl-row-title { color: #ffffff; }
+        .playlists-block .pl-row.active .pl-row-play,
+        .playlists-block .pl-row.active .pl-row-ed,
+        .playlists-block .pl-row.active .pl-row-x { color: #c8d1da; }
+        .playlists-block .pl-empty { padding: 10px 12px; font-size: 12px; color: #5e6f7e; }
+        .playlist-new-playlist {
+            display: block; width: 100%; padding: 12px 14px;
+            background: #262626; color: #c8d1da; border: none;
+            cursor: pointer; font-size: 13px; text-align: left;
+            margin-bottom: 14px;
+        }
+        .playlist-new-playlist:hover { background: #333333; }
 </style>
     <style id="no-radius">
 .app,
@@ -411,8 +609,19 @@
 
         <div class="bottom-bar">
             <button class="menu-btn bar-text" id="textBtn" title="Text">📄</button>
+            <button class="menu-btn bar-find" id="findBtn" title="Find">🔍</button>
             <button class="menu-btn bar-play" id="playBtn">▶</button>
             <button class="menu-btn bar-gear" id="gearBtn">⚙</button>
+        </div>
+
+        <div class="find-bar" id="findBar">
+            <input type="text" id="findInput" placeholder="find…" autocomplete="off">
+            <span class="find-status" id="findStatus"></span>
+        </div>
+
+                <div class="playlists-block" id="playlistsBlock" style="display:none;">
+            <button class="playlist-new-playlist" id="newPlaylistBtn">+ New playlist</button>
+            <div id="playlistsList"></div>
         </div>
 
         <div class="settings-panel" id="settingsPanel">
@@ -442,6 +651,7 @@
         </div>
     </div>
 
+<script src="../shared/persist.js"></script>
 <script src="../shared/modal.js"></script>
 <script src="../shared/ui.js"></script>
 <script src="../shared/text.js"></script>
@@ -449,7 +659,6 @@
 <script src="../shared/prep.js"></script>
 <script src="../shared/store.js"></script>
 <script src="../shared/speed.js"></script>
-<script src="../shared/pdf.js"></script>
     <script>
         // ============================================================
         // SUBTITLE MFV - Minimal Functional Version
@@ -473,31 +682,9 @@
         // ============================================================
         var STORE_KEY = 'subtitles_mfv_v1';
 
-        function saveState() {
-            try {
-                localStorage.setItem(STORE_KEY, JSON.stringify({
-                    script: input.value,
-                    idx: state.idx,
-                    wpm: state.wpm,
-                    fontSize: state.fontSize
-                }));
-            } catch (e) {}
-        }
-
-        function loadState() {
-            var raw;
-            try { raw = localStorage.getItem(STORE_KEY); } catch (e) { return false; }
-            if (!raw) return false;
-            var d;
-            try { d = JSON.parse(raw); } catch (e) { return false; }
-            if (!d) return false;
-
-            if (typeof d.script === 'string') input.value = d.script;
-            if (typeof d.wpm === 'number') state.wpm = d.wpm;
-            if (typeof d.fontSize === 'number') state.fontSize = d.fontSize;
-            if (typeof d.idx === 'number') state.idx = d.idx;
-            return true;
-        }
+        // In-memory only.
+        function saveState() {}
+        function loadState() { return false; }
 
         // HELPERS
                 var WRAP_WIDTH = 40;
@@ -1050,6 +1237,417 @@
                 handleTouchPoint(e.clientX);
             }, { passive: true });
         })();
+
+        // ============================================================
+        // FIND  (like /go in the telegram app: jump to first match)
+        // ============================================================
+        (function () {
+            var findBtn   = document.getElementById('findBtn');
+            var findBar   = document.getElementById('findBar');
+            var findInput = document.getElementById('findInput');
+            var findStat  = document.getElementById('findStatus');
+            if (!findBtn || !findBar || !findInput) return;
+
+            function setStatus(txt) { if (findStat) findStat.textContent = txt || ''; }
+
+            function openFind() {
+                findBar.classList.add('open');
+                findInput.focus();
+                findInput.select();
+            }
+            function closeFind() {
+                findBar.classList.remove('open');
+                setStatus('');
+            }
+
+            findBtn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                if (findBar.classList.contains('open')) closeFind();
+                else openFind();
+            });
+
+            findInput.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape') {
+                    e.preventDefault();
+                    closeFind();
+                    return;
+                }
+                if (e.key !== 'Enter') return;
+                e.preventDefault();
+                var needle = (findInput.value || '').trim();
+                if (!needle) { setStatus(''); return; }
+                // Stop playback, jump to first block containing needle.
+                if (autoPlay && autoPlay.isPlaying()) autoPlay.stopPlay();
+                var blocks = state.blocks || [];
+                var lower = needle.toLowerCase();
+                var found = -1;
+                for (var i = 0; i < blocks.length; i++) {
+                    if (String(blocks[i]).toLowerCase().indexOf(lower) !== -1) {
+                        found = i; break;
+                    }
+                }
+                if (found === -1) { setStatus('0/0'); return; }
+                state.idx = found;
+                render();
+                setStatus((found + 1) + '/' + blocks.length);
+            });
+
+            // Click outside -> close.
+            document.addEventListener('click', function (e) {
+                if (!findBar.classList.contains('open')) return;
+                if (findBar.contains(e.target)) return;
+                if (e.target === findBtn) return;
+                closeFind();
+            });
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape') closeFind();
+            });
+        })();
+
+        // ============================================================
+        // PLAYLIST
+        // ============================================================
+        // ============================================================
+        // PLAYLISTS (multiple, each is its own block)
+        // ============================================================
+        var PL_INDEX_KEY = 'subtitles_playlists_v1';
+        var PL_BLOB_KEY  = 'subtitles_playlist_';
+        var PL_INDEX_PATH = 'playlists.json';
+        var PL_BLOB_DIR   = 'playlists/';
+        var LEGACY_FEED_KEY = 'subtitles_feed_v1';
+        var LEGACY_ITEM_KEY = 'subtitles_item_';
+
+        function __plId() { return 's' + Date.now() + Math.floor(Math.random()*1000); }
+        function __plPid() { return 'pl' + Date.now() + Math.floor(Math.random()*1000); }
+
+        // In-memory only. Disk is the store. Nothing survives reload.
+        var __ST_CACHE = { index: null, blobs: {} };
+
+        function __plIndexLoad() {
+            return Array.isArray(__ST_CACHE.index) ? __ST_CACHE.index : [];
+        }
+        function __plIndexSave(arr) {
+            __ST_CACHE.index = arr;
+            if (typeof pSave === 'function') pSave('subtitles', PL_INDEX_KEY, PL_INDEX_PATH, arr);
+        }
+        function __plBlobLoad(pid) {
+            return __ST_CACHE.blobs[pid] || null;
+        }
+        function __plBlobSave(blob) {
+            __ST_CACHE.blobs[blob.id] = blob;
+            if (typeof pSave === 'function')
+                pSave('subtitles', PL_BLOB_KEY + blob.id, PL_BLOB_DIR + blob.id + '.json', blob);
+        }
+        function __plBlobDelete(pid) {
+            delete __ST_CACHE.blobs[pid];
+            if (typeof pDelete === 'function')
+                pDelete('subtitles', PL_BLOB_KEY + pid, PL_BLOB_DIR + pid + '.json');
+        }
+
+        // Boot: load index and every blob from disk, fill the cache, then
+        // render. On a host with no server, everything stays empty.
+        function __plHydrateFromDisk() {
+            if (typeof pLoad !== 'function') return Promise.resolve();
+            return pLoad('subtitles', PL_INDEX_KEY, PL_INDEX_PATH).then(function (idx) {
+                idx = Array.isArray(idx) ? idx : [];
+                __ST_CACHE.index = idx;
+                __ST_CACHE.blobs = {};
+                var jobs = idx.map(function (meta) {
+                    return pLoad('subtitles', PL_BLOB_KEY + meta.id,
+                                 PL_BLOB_DIR + meta.id + '.json')
+                        .then(function (blob) {
+                            if (blob && Array.isArray(blob.items)) {
+                                __ST_CACHE.blobs[meta.id] = blob;
+                            }
+                        })
+                        .catch(function () {});
+                });
+                return Promise.all(jobs);
+            }).catch(function () {});
+        }
+        function __plFind(pid) {
+            var idx = __plIndexLoad();
+            for (var i = 0; i < idx.length; i++) if (idx[i].id === pid) return idx[i];
+            return null;
+        }
+        function __plCreate(name, slug) {
+            var pid = __plPid();
+            var idx = __plIndexLoad();
+            idx.push({ id: pid, name: name || 'playlist', slug: slug || null, updatedAt: Date.now() });
+            __plIndexSave(idx);
+            __plBlobSave({ id: pid, name: name || 'playlist', slug: slug || null, items: [], updatedAt: Date.now() });
+            return pid;
+        }
+        function __plDelete(pid) {
+            var idx = __plIndexLoad().filter(function (p) { return p.id !== pid; });
+            __plIndexSave(idx);
+            __plBlobDelete(pid);
+            if (state.currentPlaylistId === pid) {
+                state.currentItemId = null;
+                state.currentPlaylistId = null;
+                input.value = '';
+                state.blocks = [];
+                state.hasContent = false;
+                state.idx = 0;
+                render();
+            }
+        }
+        function __plRename(pid) {
+            var p = __plFind(pid);
+            if (!p) return;
+            var next = prompt('Playlist name:', p.name || 'playlist');
+            if (next == null) return;
+            next = String(next).trim() || 'playlist';
+            p.name = next;
+            p.updatedAt = Date.now();
+            var idx = __plIndexLoad().map(function (x) { return x.id === pid ? p : x; });
+            __plIndexSave(idx);
+            var blob = __plBlobLoad(pid) || { id: pid, items: [], updatedAt: Date.now() };
+            blob.name = next;
+            blob.updatedAt = p.updatedAt;
+            __plBlobSave(blob);
+            __plRender();
+        }
+        function __plRenameItem(pid, itemId) {
+            var blob = __plBlobLoad(pid);
+            if (!blob) return;
+            var item = null;
+            for (var i = 0; i < blob.items.length; i++) {
+                if (blob.items[i].id === itemId) { item = blob.items[i]; break; }
+            }
+            if (!item) return;
+            var next = prompt('Item name:', item.title || 'untitled');
+            if (next == null) return;
+            next = String(next).trim() || 'untitled';
+            item.title = next;
+            item.updatedAt = Date.now();
+            blob.updatedAt = Date.now();
+            __plBlobSave(blob);
+            __plRender();
+        }
+        function __plAddItem(pid, title, text) {
+            var blob = __plBlobLoad(pid) || { id: pid, name: 'playlist', items: [], updatedAt: Date.now() };
+            var item = { id: __plId(), title: title || 'untitled', text: text || '', updatedAt: Date.now() };
+            blob.items.push(item);
+            blob.updatedAt = item.updatedAt;
+            __plBlobSave(blob);
+            __plLoadItemIntoApp(pid, item.id);
+            __plRender();
+        }
+        function __plDeleteItem(pid, itemId) {
+            var blob = __plBlobLoad(pid);
+            if (!blob) return;
+            blob.items = blob.items.filter(function (x) { return x.id !== itemId; });
+            blob.updatedAt = Date.now();
+            __plBlobSave(blob);
+            if (state.currentItemId === itemId) {
+                state.currentItemId = null;
+                state.currentPlaylistId = null;
+                input.value = '';
+                state.blocks = [];
+                state.hasContent = false;
+                state.idx = 0;
+                render();
+            }
+            __plRender();
+        }
+        function __plSaveCurrentIntoItem() {
+            if (!state.currentItemId || !state.currentPlaylistId) return;
+            var blob = __plBlobLoad(state.currentPlaylistId);
+            if (!blob) return;
+            for (var i = 0; i < blob.items.length; i++) {
+                if (blob.items[i].id === state.currentItemId) {
+                    blob.items[i].text = input.value || '';
+                    blob.items[i].updatedAt = Date.now();
+                    break;
+                }
+            }
+            blob.updatedAt = Date.now();
+            __plBlobSave(blob);
+            var idx = __plIndexLoad();
+            for (var k = 0; k < idx.length; k++) {
+                if (idx[k].id === state.currentPlaylistId) { idx[k].updatedAt = Date.now(); break; }
+            }
+            __plIndexSave(idx);
+        }
+        function __plLoadItemIntoApp(pid, itemId) {
+            __plSaveCurrentIntoItem();
+            var blob = __plBlobLoad(pid);
+            if (!blob) return;
+            var item = null;
+            for (var i = 0; i < blob.items.length; i++) {
+                if (blob.items[i].id === itemId) { item = blob.items[i]; break; }
+            }
+            if (!item) return;
+            state.currentPlaylistId = pid;
+            state.currentItemId = itemId;
+            input.value = item.text || '';
+            state.blocks = splitBlocks(item.text || '');
+            state.hasContent = state.blocks.length > 0;
+            state.idx = 0;
+            // Bump the playlist so it floats to the top of the list.
+            var idx = __plIndexLoad();
+            for (var k = 0; k < idx.length; k++) {
+                if (idx[k].id === pid) { idx[k].updatedAt = Date.now(); break; }
+            }
+            __plIndexSave(idx);
+            render();
+        }
+        function __plRender() {
+            var host = document.getElementById('playlistsList');
+            if (!host) return;
+            var idx = __plIndexLoad();
+            idx.sort(function (a, b) { return (b.updatedAt || 0) - (a.updatedAt || 0); });
+            host.innerHTML = '';
+            if (!idx.length) {
+                var empty = document.createElement('div');
+                empty.className = 'pl-empty';
+                empty.textContent = 'No playlists yet.';
+                host.appendChild(empty);
+                return;
+            }
+            idx.forEach(function (meta) {
+                var blob = __plBlobLoad(meta.id) || { id: meta.id, items: [] };
+                var block = document.createElement('div');
+                block.className = 'pl-block';
+
+                var head = document.createElement('div');
+                head.className = 'pl-head';
+                var nameEl = document.createElement('span');
+                nameEl.className = 'pl-name';
+                nameEl.textContent = meta.name || 'playlist';
+                head.appendChild(nameEl);
+                var edit = document.createElement('span');
+                edit.className = 'pl-btn';
+                edit.textContent = '\u270E';
+                edit.title = 'Rename';
+                edit.addEventListener('click', function (e) { e.stopPropagation(); __plRename(meta.id); });
+                head.appendChild(edit);
+                var del = document.createElement('span');
+                del.className = 'pl-btn del';
+                del.textContent = '\u00d7';
+                del.title = 'Delete playlist';
+                del.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    if (!confirm('Delete playlist "' + (meta.name || 'playlist') + '"?')) return;
+                    __plDelete(meta.id);
+                    __plRender();
+                });
+                head.appendChild(del);
+                block.appendChild(head);
+
+                var addBtn = document.createElement('button');
+                addBtn.className = 'pl-new';
+                addBtn.textContent = '+ New';
+                addBtn.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    __plSaveCurrentIntoItem();
+                    __plAddItem(meta.id, 'untitled', '');
+                });
+                block.appendChild(addBtn);
+
+                (blob.items || []).slice().sort(function (a, b) { return (b.updatedAt || 0) - (a.updatedAt || 0); }).forEach(function (item) {
+                    var row = document.createElement('div');
+                    row.className = 'pl-row' + (item.id === state.currentItemId ? ' active' : '');
+
+                    // ▶ play button on the left.
+                    var play = document.createElement('span');
+                    play.className = 'pl-row-play';
+                    play.textContent = '\u25B6';
+                    play.title = 'Play';
+                    play.addEventListener('click', function (e) {
+                        e.stopPropagation();
+                        __plLoadItemIntoApp(meta.id, item.id);
+                        if (autoPlay && !autoPlay.isPlaying()) autoPlay.startPlay();
+                    });
+                    row.appendChild(play);
+
+                    var t = document.createElement('span');
+                    t.className = 'pl-row-title';
+                    // Fallback title: first words of the script.
+                    var label = item.title;
+                    if (!label || label === 'untitled') {
+                        var body = String(item.text || '').replace(/\s+/g, ' ').trim();
+                        label = body ? (body.split(' ').slice(0, 6).join(' ') +
+                                        (body.split(' ').length > 6 ? '\u2026' : ''))
+                                     : 'untitled';
+                    }
+                    t.textContent = label;
+                    row.appendChild(t);
+                    var ed = document.createElement('span');
+                    ed.className = 'pl-row-ed';
+                    ed.textContent = '\u270E';
+                    ed.title = 'Rename item';
+                    ed.addEventListener('click', function (e) {
+                        e.stopPropagation();
+                        __plRenameItem(meta.id, item.id);
+                    });
+                    row.appendChild(ed);
+                    var x = document.createElement('span');
+                    x.className = 'pl-row-x';
+                    x.textContent = '\u00d7';
+                    x.title = 'Delete item';
+                    x.addEventListener('click', function (e) {
+                        e.stopPropagation();
+                        if (!confirm('Delete "' + (item.title || 'untitled') + '"?')) return;
+                        __plDeleteItem(meta.id, item.id);
+                    });
+                    row.appendChild(x);
+                    row.addEventListener('click', function () {
+                        __plLoadItemIntoApp(meta.id, item.id);
+                        __plRender();
+                    });
+                    block.appendChild(row);
+                });
+
+                host.appendChild(block);
+            });
+        }
+        function __plToggle(force) {
+            var el = document.getElementById('playlistsBlock');
+            if (!el) return;
+            var open = (typeof force === 'boolean') ? force : (el.style.display === 'none');
+            el.style.display = open ? 'block' : 'none';
+            if (open) __plRender();
+        }
+
+        function __plMigrateLegacy() {
+            // Nothing to migrate: localStorage is gone.
+            if (__plIndexLoad().length) return;
+            __plCreate('default');
+        }
+
+        (function () {
+            var bar = document.querySelector('.bottom-bar');
+            if (!bar) return;
+            var btn = document.createElement('button');
+            btn.className = 'menu-btn bar-pl';
+            btn.id = 'playlistBtn';
+            btn.title = 'Playlists';
+            btn.textContent = '\u2630';
+            var tb = document.getElementById('textBtn');
+            if (tb) bar.insertBefore(btn, tb);
+            else bar.appendChild(btn);
+            btn.onclick = function (e) { e.stopPropagation(); __plToggle(); };
+        })();
+        (function () {
+            var nb = document.getElementById('newPlaylistBtn');
+            if (!nb) return;
+            nb.onclick = function () {
+                __plCreate('playlist');
+                __plRender();
+            };
+        })();
+
+        __plMigrateLegacy();
+        __plHydrateFromDisk().then(function () {
+            __plRender();
+        });
+
+        input.addEventListener('input', function () {
+            __plSaveCurrentIntoItem();
+        });
+
 
 </script>
         <script src="../shared/bridge.js"></script>

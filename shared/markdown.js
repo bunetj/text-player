@@ -23,6 +23,11 @@ function __md(md) {
     md = md.replace(/(^|[^"'>])(https?:\/\/[^\s<]+)/g, function (_, p, u) {
         return p + '<a href="' + u + '" target="_blank" rel="noopener">' + u + '</a>';
     });
+    // file:/// links: mark with data-file so the click handler can route them
+    // through the local server instead of letting the browser block them.
+    md = md.replace(/(^|[^"'>])(file:\/\/[^\s<]+)/g, function (_, p, u) {
+        return p + '<a href="' + u + '" data-file="' + u + '">' + u + '</a>';
+    });
     md = md.replace(/^### (.*)$/gm, '<h3>$1</h3>');
     md = md.replace(/^## (.*)$/gm,  '<h2>$1</h2>');
     md = md.replace(/^# (.*)$/gm,   '<h1>$1</h1>');

@@ -16,8 +16,8 @@ function createMsgNode(text, author, delay, reacted, perspective) {
     var _w = document.createElement('div'); _w.className = 'bubble-content-wrapper';
     var _c = document.createElement('div'); _c.className = 'bubble-content';
     var _m = document.createElement('div'); _m.className = 'message';
-    if (author === 'other') _m.innerHTML = __md(text);
-    else                    _m.textContent = text;
+    // Both sides parse markdown, same as channels.
+    _m.innerHTML = __md(text);
     _c.appendChild(_m); _w.appendChild(_c); d.appendChild(_w);
     return d;
 }

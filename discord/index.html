@@ -1438,7 +1438,6 @@
 <script src="../shared/persist.js"></script>
     <script src="../shared/text.js"></script>
 <script src="../shared/speed.js"></script>
-<script src="../shared/pdf.js"></script>
     <script>
         // ============================================
         // JAVASCRIPT - Complete App Logic
@@ -1487,6 +1486,7 @@
                 personas: personas,
                 activePersonaId: activePersonaId,
             };
+            // pSave handles local (disk) vs Pages (localStorage).
             pSave('discord', 'mirrorChatFull_' + chatId, 'chats/' + chatId + '.json', blob);
         }
 
@@ -1546,15 +1546,24 @@
     
                 // ----- Initialize -----
         function initializeChats() {
-            let chats = localStorage.getItem("mirrorChats");
-            if (!chats) {
-                pLoad('discord', 'mirrorChats', 'feed.json').then(function (fileChats) {
-                    if (Array.isArray(fileChats) && fileChats.length) {
-                        try { localStorage.setItem('mirrorChats', JSON.stringify(fileChats)); } catch (e) {}
+            // Disk-first: pull feed.json, then read chats from it.
+            var __host = location.hostname;
+            var __isLocal = (__host === 'localhost' || __host === '127.0.0.1'
+                          || __host === '' || __host === '0.0.0.0');
+            if (__isLocal && !window.__dsInitLoaded) {
+                window.__dsInitLoaded = true;
+                fetch('/data/discord/feed.json', { cache: 'no-store' })
+                    .then(function (r) { return r.ok ? r.json() : null; })
+                    .then(function (fileChats) {
+                        if (Array.isArray(fileChats) && fileChats.length) {
+                            try { localStorage.setItem('mirrorChats', JSON.stringify(fileChats)); } catch (e) {}
+                        }
                         initializeChats();
-                    }
-                });
+                    })
+                    .catch(function () { initializeChats(); });
+                return;
             }
+            let chats = localStorage.getItem("mirrorChats");
             if (!chats) {
                 const firstChat = {
                     id: "chat_" + Date.now(),
@@ -1634,6 +1643,16 @@
         
         // ----- Chat Management -----
         function switchToChat(chatId) {
+            // bump updatedAt so books.py can pick the most recent chat
+            try {
+                var __chats = JSON.parse(localStorage.getItem('mirrorChats') || '[]');
+                for (var __i = 0; __i < __chats.length; __i++) {
+                    if (__chats[__i].id === chatId) { __chats[__i].updatedAt = Date.now(); break; }
+                }
+                localStorage.setItem('mirrorChats', JSON.stringify(__chats));
+                pSave('discord', 'mirrorChats', 'feed.json', __chats);
+            } catch (e) {}
+
             saveCurrentChat();
             currentChatId = chatId;
             localStorage.setItem("mirrorChatCurrent", chatId);
@@ -1655,6 +1674,7 @@
             const newChat = {
                 id: "chat_" + Date.now(),
                 name: `Channel ${chats.length + 1}`,
+                slug: null,
                 createdAt: new Date().toISOString(),
             };
             
@@ -1720,8 +1740,38 @@
             }
         }
         
-        function loadCurrentChat() {
+        function loadCurrentChat(skipDisk) {
     if (!currentChatId) return;
+
+    // Disk-first: one-shot fetch of the chat blob. If anything came back,
+    // write it into localStorage and re-enter without skipDisk.
+    var __host = location.hostname;
+    var __isLocal = (__host === 'localhost' || __host === '127.0.0.1'
+                  || __host === '' || __host === '0.0.0.0');
+    if (__isLocal && !skipDisk) {
+        fetch('/data/discord/chats/' + encodeURIComponent(currentChatId) + '.json',
+              { cache: 'no-store' })
+            .then(function (r) { return r.ok ? r.json() : null; })
+            .then(function (blob) {
+                if (blob) {
+                    try {
+                        if (Array.isArray(blob.personas)) {
+                            localStorage.setItem('mirrorChatPersonas_' + currentChatId, JSON.stringify(blob.personas));
+                        }
+                        if (Array.isArray(blob.messages)) {
+                            localStorage.setItem('mirrorChat_' + currentChatId, JSON.stringify(blob.messages));
+                            localStorage.setItem('mirrorChat', JSON.stringify(blob.messages));
+                        }
+                        if (blob.activePersonaId) {
+                            localStorage.setItem('mirrorChatActivePersona_' + currentChatId, blob.activePersonaId);
+                        }
+                    } catch (e) {}
+                }
+                loadCurrentChat(true);
+            })
+            .catch(function () { loadCurrentChat(true); });
+        return;
+    }
 
     const savedPersonas = localStorage.getItem(
         `mirrorChatPersonas_${currentChatId}`
@@ -1778,11 +1828,15 @@
         localStorage.removeItem("mirrorChat");
         pLoad('discord', 'mirrorChatFull_' + currentChatId, 'chats/' + currentChatId + '.json')
             .then(function (blob) {
-                if (!blob) return;
                 try {
-                    if (blob.messages) localStorage.setItem('mirrorChat', JSON.stringify(blob.messages));
-                    if (blob.personas) localStorage.setItem('mirrorChatPersonas_' + currentChatId, JSON.stringify(blob.personas));
-                    if (blob.activePersonaId) localStorage.setItem('mirrorChatActivePersona_' + currentChatId, blob.activePersonaId);
+                    var __msgs = (blob && blob.messages) ? blob.messages : [];
+                    var __msgsStr = JSON.stringify(__msgs);
+                    // Always write both keys, even empty, so the recursive
+                    // call takes the fast branch and doesn't loop forever.
+                    localStorage.setItem('mirrorChat_' + currentChatId, __msgsStr);
+                    localStorage.setItem('mirrorChat', __msgsStr);
+                    if (blob && blob.personas) localStorage.setItem('mirrorChatPersonas_' + currentChatId, JSON.stringify(blob.personas));
+                    if (blob && blob.activePersonaId) localStorage.setItem('mirrorChatActivePersona_' + currentChatId, blob.activePersonaId);
                 } catch (e) {}
                 loadCurrentChat();
             });
@@ -2185,6 +2239,107 @@
             renderChat();
         }
         
+        // ----- /go navigation -----
+        var __goLast = null;
+        var __goFlashTimers = {};
+
+        function __goFeedback(msg) {
+            messageInput.placeholder = msg;
+            try { messageInput.focus(); } catch (e) {}
+        }
+
+        function __goPersonaByName(name) {
+            if (!name) return null;
+            var needle = name.toLowerCase();
+            var list = personas || [];
+            // exact
+            for (var i = 0; i < list.length; i++) {
+                if ((list[i].name || '').toLowerCase() === needle) return list[i];
+            }
+            // prefix
+            for (var j = 0; j < list.length; j++) {
+                if ((list[j].name || '').toLowerCase().indexOf(needle) === 0) return list[j];
+            }
+            // substring
+            for (var k = 0; k < list.length; k++) {
+                if ((list[k].name || '').toLowerCase().indexOf(needle) !== -1) return list[k];
+            }
+            return null;
+        }
+
+        function __goScroll(msgId) {
+            var el = chatMessages.querySelector('.message-container[data-message-id="' + msgId + '"]');
+            if (!el) return;
+            try { el.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) { el.scrollIntoView(); }
+            // brief flash
+            var prev = el.style.background;
+            el.style.background = 'rgba(88,101,242,0.25)';
+            if (__goFlashTimers[msgId]) clearTimeout(__goFlashTimers[msgId]);
+            __goFlashTimers[msgId] = setTimeout(function () {
+                el.style.background = prev || '';
+                delete __goFlashTimers[msgId];
+            }, 900);
+        }
+
+        function __goHandler(raw) {
+            // raw is the whole line, starting with "/go"
+            var rest = raw.replace(/^\/go\b/, '').trim();
+            if (rest.length >= 2 &&
+                ((rest[0] === '"' && rest[rest.length-1] === '"') ||
+                 (rest[0] === "'" && rest[rest.length-1] === "'"))) {
+                rest = rest.slice(1, -1);
+            }
+            if (!rest) {
+                if (!__goLast) { __goFeedback('no last search'); return; }
+                rest = __goLast;
+            }
+
+            // Split: "<persona> <text>" or "<text>"
+            var personaName = null;
+            var needle = rest;
+            var sp = rest.indexOf(' ');
+            if (sp > 0) {
+                var maybePersona = rest.slice(0, sp);
+                var p = __goPersonaByName(maybePersona);
+                if (p) {
+                    personaName = p.name;
+                    needle = rest.slice(sp + 1).trim();
+                }
+            }
+
+            if (!needle) { __goFeedback('nothing to search'); return; }
+
+            var saved = localStorage.getItem('mirrorChat');
+            var messages = saved ? JSON.parse(saved) : [];
+            var needleLc = needle.toLowerCase();
+            var target = null;
+            var targetIndex = -1;
+            var total = 0;
+
+            for (var i = 0; i < messages.length; i++) {
+                var m = messages[i];
+                var text = (m.text || '').toLowerCase();
+                if (text.indexOf(needleLc) === -1) continue;
+                if (personaName) {
+                    var person = personas.find(function (x) { return x.id === m.personaId; });
+                    if (!person || person.name !== personaName) continue;
+                }
+                total++;
+                if (!target) { target = m; targetIndex = i; }
+            }
+
+            if (!target) {
+                __goFeedback('no match: ' + needle);
+                return;
+            }
+
+            __goLast = rest;
+            __goScroll(target.id);
+            __goFeedback('at ' + (personaName ? (personaName + ' ') : '') +
+                         '"' + needle + '" (' + (targetIndex + 1) + '/' + messages.length + ')' +
+                         (total > 1 ? '  +' + (total - 1) + ' more' : ''));
+        }
+
         // ----- Clear Chat -----
         function clearChat() {
             if (confirm("Clear all messages? This cannot be undone.")) {
@@ -2302,6 +2457,12 @@
         messageInput.addEventListener("keydown", (e) => {
             if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
+                var raw = messageInput.value.trim();
+                if (raw.indexOf('/go') === 0 && (raw.length === 3 || /\s/.test(raw.charAt(3)))) {
+                    messageInput.value = '';
+                    __goHandler(raw);
+                    return;
+                }
                 sendMessage();
             }
         });
