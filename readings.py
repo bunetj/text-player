@@ -19,6 +19,7 @@ import io, os, re, sys, json, time, shutil, zipfile, subprocess, unicodedata
 
 HERE      = os.path.dirname(os.path.abspath(__file__))     # code/
 READINGS  = os.path.join(HERE, "readings")
+READINGS_IMPORTED = os.path.join(HERE, "readings_imported")
 
 TG_DATA   = os.path.join(HERE, "telegram", "data")
 TG_CHATS  = os.path.join(TG_DATA, "chats")
@@ -362,17 +363,77 @@ def tg_find_or_create_folder(slug, name):
     return fid
 
 # ---------- importers ----------
+#
+# All three importers share the same shape:
+#   1. find-or-create the group (folder / channel / playlist) for `slug`
+#   2. skip if an item with this `title` already exists in that group
+#   3. append the item
+#   4. save
+# The only differences are the storage file, the on-disk shape of the
+# group, and the item's extra fields. Those are captured by _GroupSpec
+# below. Each importer is now a thin adapter.
 
+class _GroupSpec:
+    """How one target app stores a group and its items."""
+
+    def __init__(self, name, index_path, blob_dir, group_kind, item_kind,
+                 make_group, make_item):
+        self.name       = name          # 'tg' | 'ds' | 'st'
+        self.index_path = index_path
+        self.blob_dir   = blob_dir
+        self.group_kind = group_kind
+        self.item_kind  = item_kind
+        self.make_group = make_group    # (gid, slug, group_name) -> group record
+        self.make_item  = make_item     # (title, text) -> item record
+
+
+def _import_generic(spec, title, text, slug, group_name,
+                    index, find_group, get_items, set_items,
+                    blob_path_for):
+    """Shared import path. `spec` carries only the differences."""
+    group = find_group(index, slug)
+    if group:
+        gid = group.get("id")
+        blob = json_load(blob_path_for(gid)) or {
+            "id": gid, "name": group_name, "slug": slug,
+            "items": [], "updatedAt": now_ms()
+        }
+    else:
+        gid = spec.name + "_" + str(now_ms())
+        index.append(spec.make_group(gid, slug, group_name))
+        os.makedirs(spec.blob_dir, exist_ok=True)
+        json_save(spec.index_path, index)
+        blob = {"id": gid, "name": group_name, "slug": slug,
+                "items": [], "updatedAt": now_ms()}
+
+    items = get_items(blob) or []
+    for it in items:
+        if it.get("title") == title:
+            print("  " + spec.name + " skip (exists): " + title)
+            return
+    items.append(spec.make_item(title, text))
+    set_items(blob, items)
+    blob["updatedAt"] = now_ms()
+    os.makedirs(spec.blob_dir, exist_ok=True)
+    json_save(blob_path_for(gid), blob)
+    print("  " + spec.name + " " + spec.item_kind + " (" + title +
+          ") -> " + spec.group_kind + " " + group_name)
+
+
+# ---- tg adapter ----
 def import_tg(title, text, slug, group_name):
-    folder_id = tg_find_or_create_folder(slug, group_name)
-    chat_id = "c" + str(now_ms())
+    # tg's group is a folder in folders.md, not a row in feed.json; that
+    # difference is what keeps tg from fitting the generic path cleanly.
+    # Keep it as a self-contained adapter.
     feed = json_load(TG_FEED) or []
     if not isinstance(feed, list): feed = []
 
-    # skip if already there
     for r in feed:
         if r.get("title") == title:
             print("  tg skip (exists): " + title); return
+
+    folder_id = tg_find_or_create_folder(slug, group_name)
+    chat_id = "c" + str(now_ms())
 
     people = json.loads(json.dumps(DEFAULT_PEOPLE))
     people["other"]["name"] = title
@@ -398,82 +459,59 @@ def import_tg(title, text, slug, group_name):
     print("  tg chat " + chat_id + " (" + title + ") -> folder " + group_name)
 
 
+# ---- ds adapter ----
 def import_ds(title, text, slug, group_name):
-    feed = json_load(DS_FEED) or []
-    if not isinstance(feed, list): feed = []
+    def find_group(idx, s):
+        for r in idx:
+            if r.get("slug") == s: return r
+        return None
+    def make_group(gid, s, gn):
+        return {"id": gid, "name": gn, "slug": s,
+                "createdAt": time.strftime("%Y-%m-%dT%H:%M:%S")}
+    def make_item(t, body):
+        return {"id": "p" + str(now_ms()), "name": t,
+                "color": "#5865f2", "symbol": "\U0001F4D6",
+                "type": "speaker", "script": body, "scriptPos": 0}
+    def get_items(blob): return blob.get("personas")
+    def set_items(blob, items): blob["personas"] = items
+    def blob_path_for(gid): return os.path.join(DS_CHATS, gid + ".json")
 
-    chat_id = None
-    for r in feed:
-        if r.get("slug") == slug: chat_id = r.get("id"); break
-
-    if not chat_id:
-        chat_id = "chat_" + str(now_ms())
-        feed.append({
-            "id": chat_id,
-            "name": group_name,
-            "slug": slug,
-            "createdAt": time.strftime("%Y-%m-%dT%H:%M:%S"),
-        })
-        json_save(DS_FEED, feed)
-
-    blob_path = os.path.join(DS_CHATS, chat_id + ".json")
-    blob = json_load(blob_path) or {"messages": [], "personas": [], "activePersonaId": None}
-    personas = blob.get("personas") or []
-
-    for p in personas:
-        if p.get("name") == title:
-            print("  ds skip (exists): " + title); return
-
-    personas.append({
-        "id": "p" + str(now_ms()),
-        "name": title,
-        "color": "#5865f2",
-        "symbol": "\U0001F4D6",
-        "type": "speaker",
-        "script": text,
-        "scriptPos": 0,
-    })
-    blob["personas"] = personas
-    os.makedirs(DS_CHATS, exist_ok=True)
-    json_save(blob_path, blob)
-    print("  ds persona in " + chat_id + " (" + title + ") -> channel " + group_name)
+    spec = _GroupSpec(
+        name="ds", index_path=DS_FEED, blob_dir=DS_CHATS,
+        group_kind="channel", item_kind="persona",
+        make_group=make_group, make_item=make_item,
+    )
+    index = json_load(DS_FEED) or []
+    if not isinstance(index, list): index = []
+    _import_generic(spec, title, text, slug, group_name,
+                    index, find_group, get_items, set_items, blob_path_for)
 
 
+# ---- st adapter ----
 def import_st(title, text, slug, group_name):
-    pl_index = json_load(ST_PL_INDEX) or []
-    if not isinstance(pl_index, list): pl_index = []
+    def find_group(idx, s):
+        for r in idx:
+            if r.get("slug") == s: return r
+        return None
+    def make_group(gid, s, gn):
+        return {"id": gid, "name": gn, "slug": s,
+                "updatedAt": now_ms()}
+    def make_item(t, body):
+        return {"id": "s" + str(now_ms()), "title": t,
+                "text": body, "updatedAt": now_ms()}
+    def get_items(blob): return blob.get("items")
+    def set_items(blob, items): blob["items"] = items
+    def blob_path_for(gid): return os.path.join(ST_PL_DIR, gid + ".json")
 
-    pid = None
-    for p in pl_index:
-        if p.get("slug") == slug: pid = p.get("id"); break
-
-    if not pid:
-        pid = "pl" + str(now_ms())
-        pl_index.append({
-            "id": pid, "name": group_name, "slug": slug,
-            "updatedAt": now_ms(),
-        })
-        json_save(ST_PL_INDEX, pl_index)
-
-    blob_path = os.path.join(ST_PL_DIR, pid + ".json")
-    blob = json_load(blob_path) or {"id": pid, "name": group_name, "slug": slug, "items": [], "updatedAt": now_ms()}
-    items = blob.get("items") or []
-
-    for it in items:
-        if it.get("title") == title:
-            print("  st skip (exists): " + title); return
-
-    items.append({
-        "id": "s" + str(now_ms()),
-        "title": title,
-        "text": text,
-        "updatedAt": now_ms(),
-    })
-    blob["items"] = items
-    blob["updatedAt"] = now_ms()
-    os.makedirs(ST_PL_DIR, exist_ok=True)
-    json_save(blob_path, blob)
-    print("  st item (" + title + ") -> playlist " + group_name)
+    spec = _GroupSpec(
+        name="st", index_path=ST_PL_INDEX, blob_dir=ST_PL_DIR,
+        group_kind="playlist", item_kind="item",
+        make_group=make_group, make_item=make_item,
+    )
+    index = json_load(ST_PL_INDEX) or []
+    if not isinstance(index, list): index = []
+    _import_generic(spec, title, text, slug, group_name,
+                    index, find_group, get_items, set_items, blob_path_for)
 
 
 # ---------- walk readings tree ----------
@@ -520,7 +558,27 @@ def do_import(app, chat_ops):
         elif app == "st": import_st(title, text, slug, group_name)
         else:
             print("unknown app: " + app); return
+
+        move_imported(full, rel_dir)
     print("done.")
+
+
+def move_imported(src_path, rel_dir):
+    """Move a successfully imported .txt from readings/ to
+    readings_imported/, preserving its relative subfolder. If the
+    destination exists, skip the move and leave the source in place."""
+    rel_dir = rel_dir or ""
+    dest_dir = os.path.join(READINGS_IMPORTED, rel_dir) if rel_dir else READINGS_IMPORTED
+    dest = os.path.join(dest_dir, os.path.basename(src_path))
+    if os.path.exists(dest):
+        print("  move skip (dest exists): " + os.path.relpath(dest, HERE))
+        return
+    os.makedirs(dest_dir, exist_ok=True)
+    try:
+        shutil.move(src_path, dest)
+        print("  moved -> " + os.path.relpath(dest, HERE))
+    except Exception as e:
+        print("  move FAILED: " + str(e))
 
 
 # ---------- main ----------

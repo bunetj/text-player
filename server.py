@@ -22,6 +22,8 @@ DATA_APPS = ("telegram", "discord", "subtitles")
 import base64 as _b64
 import shutil as _shutil
 import urllib.parse as _up
+import urllib.request as _urlreq
+import urllib.request as _urlreq
 
 _TG_ROOT   = Path(ROOT)
 _TG_DIR    = _TG_ROOT / "telegram"
@@ -98,6 +100,12 @@ class Handler(SimpleHTTPRequestHandler):
         if self.path == "/data/ping":
             self._send_json(200, {"ok": True})
             return
+        # /fetch?url=... — plain-text fetch for URL import (subtitles).
+        if self.path.startswith("/fetch"):
+            return self._handle_fetch()
+        # /fetch?url=... — plain-text fetch for URL import (subtitles).
+        if self.path.startswith("/fetch"):
+            return self._handle_fetch()
         # __TGC_MERGE__ routes
         if self.path == "/telegram/data-bundle":
             return self._tg_handle_data_bundle()
@@ -182,6 +190,54 @@ class Handler(SimpleHTTPRequestHandler):
         self.send_header("Cache-Control", "no-store")
         self.end_headers()
         self.wfile.write(body)
+
+    def _handle_fetch(self):
+        import urllib.parse as _up2
+        parsed = _up2.urlparse(self.path)
+        qs = _up2.parse_qs(parsed.query or "")
+        raw = (qs.get("url") or [""])[0]
+        if not raw:
+            return self._send_json(400, {"ok": False, "error": "missing url"})
+        u = _up2.urlparse(raw)
+        if u.scheme not in ("http", "https"):
+            return self._send_json(400, {"ok": False, "error": "bad scheme"})
+        try:
+            req = _urlreq.Request(raw, headers={"User-Agent": "Mozilla/5.0"})
+            with _urlreq.urlopen(req, timeout=15) as r:
+                ct = r.headers.get("Content-Type", "") or ""
+                data = r.read()
+            body = data.decode("utf-8", errors="replace")
+            return self._send_json(200, {
+                "ok": True,
+                "contentType": ct,
+                "body": body,
+            })
+        except Exception as e:
+            return self._send_json(200, {"ok": False, "error": str(e)})
+
+    def _handle_fetch(self):
+        import urllib.parse as _up2
+        parsed = _up2.urlparse(self.path)
+        qs = _up2.parse_qs(parsed.query or "")
+        raw = (qs.get("url") or [""])[0]
+        if not raw:
+            return self._send_json(400, {"ok": False, "error": "missing url"})
+        u = _up2.urlparse(raw)
+        if u.scheme not in ("http", "https"):
+            return self._send_json(400, {"ok": False, "error": "bad scheme"})
+        try:
+            req = _urlreq.Request(raw, headers={"User-Agent": "Mozilla/5.0"})
+            with _urlreq.urlopen(req, timeout=15) as r:
+                ct = r.headers.get("Content-Type", "") or ""
+                data = r.read()
+            body = data.decode("utf-8", errors="replace")
+            return self._send_json(200, {
+                "ok": True,
+                "contentType": ct,
+                "body": body,
+            })
+        except Exception as e:
+            return self._send_json(200, {"ok": False, "error": str(e)})
 
     def _tg_handle_data_bundle(self):
         data_root = _TG_DATA

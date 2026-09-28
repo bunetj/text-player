@@ -549,6 +549,86 @@
         .playlists-block .pl-row.active .pl-row-ed,
         .playlists-block .pl-row.active .pl-row-x { color: #c8d1da; }
         .playlists-block .pl-empty { padding: 10px 12px; font-size: 12px; color: #5e6f7e; }
+        /* find bar: a plain line under the controls. No box. */
+        .find-bar {
+            display: none;
+            flex-shrink: 0;
+            align-items: center;
+            gap: 10px;
+            padding: 4px 12px 8px;
+        }
+        .find-bar.open { display: flex; }
+        .find-bar input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid #333333;
+            color: #e8edf2;
+            font-size: 13px;
+            font-family: inherit;
+            padding: 4px 2px;
+            outline: none;
+        }
+        .find-bar input::placeholder { color: #5e6f7e; }
+        .find-bar input:focus { border-bottom-color: #7a7a7a; }
+        .find-bar .find-status {
+            font-size: 11px;
+            color: #5e6f7e;
+            min-width: 40px;
+            text-align: right;
+        }
+        .bottom-bar .bar-find {
+            position: absolute;
+            left: 76px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 18px;
+            color: #8e9aa5;
+            background: transparent;
+            padding: 6px 10px;
+        }
+        .bottom-bar .bar-find:hover { color: #e8edf2; }
+
+        /* find bar: a plain line under the controls. No box. */
+        .find-bar {
+            display: none;
+            flex-shrink: 0;
+            align-items: center;
+            gap: 10px;
+            padding: 4px 12px 8px;
+        }
+        .find-bar.open { display: flex; }
+        .find-bar input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid #333333;
+            color: #e8edf2;
+            font-size: 13px;
+            font-family: inherit;
+            padding: 4px 2px;
+            outline: none;
+        }
+        .find-bar input::placeholder { color: #5e6f7e; }
+        .find-bar input:focus { border-bottom-color: #7a7a7a; }
+        .find-bar .find-status {
+            font-size: 11px;
+            color: #5e6f7e;
+            min-width: 40px;
+            text-align: right;
+        }
+        .bottom-bar .bar-find {
+            position: absolute;
+            left: 76px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 18px;
+            color: #8e9aa5;
+            background: transparent;
+            padding: 6px 10px;
+        }
+        .bottom-bar .bar-find:hover { color: #e8edf2; }
+
         .playlist-new-playlist {
             display: block; width: 100%; padding: 12px 14px;
             background: #262626; color: #c8d1da; border: none;
@@ -1305,6 +1385,124 @@
         })();
 
         // ============================================================
+        // FIND  (jump to first block containing needle, like /go)
+        // ============================================================
+        (function () {
+            var findBtn   = document.getElementById('findBtn');
+            var findBar   = document.getElementById('findBar');
+            var findInput = document.getElementById('findInput');
+            var findStat  = document.getElementById('findStatus');
+            if (!findBtn || !findBar || !findInput) return;
+
+            function setStatus(txt) { if (findStat) findStat.textContent = txt || ''; }
+            function openFind() {
+                findBar.classList.add('open');
+                findInput.focus();
+                findInput.select();
+            }
+            function closeFind() {
+                findBar.classList.remove('open');
+                setStatus('');
+            }
+
+            findBtn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                if (findBar.classList.contains('open')) closeFind();
+                else openFind();
+            });
+
+            findInput.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape') { e.preventDefault(); closeFind(); return; }
+                if (e.key !== 'Enter') return;
+                e.preventDefault();
+                var needle = (findInput.value || '').trim();
+                if (!needle) { setStatus(''); return; }
+                if (autoPlay && autoPlay.isPlaying()) autoPlay.stopPlay();
+                var blocks = state.blocks || [];
+                var lower = needle.toLowerCase();
+                var found = -1;
+                for (var i = 0; i < blocks.length; i++) {
+                    if (String(blocks[i]).toLowerCase().indexOf(lower) !== -1) {
+                        found = i; break;
+                    }
+                }
+                if (found === -1) { setStatus('0/0'); return; }
+                state.idx = found;
+                render();
+                setStatus((found + 1) + '/' + blocks.length);
+            });
+
+            document.addEventListener('click', function (e) {
+                if (!findBar.classList.contains('open')) return;
+                if (findBar.contains(e.target)) return;
+                if (e.target === findBtn) return;
+                closeFind();
+            });
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape') closeFind();
+            });
+        })();
+
+        // ============================================================
+        // FIND  (jump to first block containing needle, like /go)
+        // ============================================================
+        (function () {
+            var findBtn   = document.getElementById('findBtn');
+            var findBar   = document.getElementById('findBar');
+            var findInput = document.getElementById('findInput');
+            var findStat  = document.getElementById('findStatus');
+            if (!findBtn || !findBar || !findInput) return;
+
+            function setStatus(txt) { if (findStat) findStat.textContent = txt || ''; }
+            function openFind() {
+                findBar.classList.add('open');
+                findInput.focus();
+                findInput.select();
+            }
+            function closeFind() {
+                findBar.classList.remove('open');
+                setStatus('');
+            }
+
+            findBtn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                if (findBar.classList.contains('open')) closeFind();
+                else openFind();
+            });
+
+            findInput.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape') { e.preventDefault(); closeFind(); return; }
+                if (e.key !== 'Enter') return;
+                e.preventDefault();
+                var needle = (findInput.value || '').trim();
+                if (!needle) { setStatus(''); return; }
+                if (autoPlay && autoPlay.isPlaying()) autoPlay.stopPlay();
+                var blocks = state.blocks || [];
+                var lower = needle.toLowerCase();
+                var found = -1;
+                for (var i = 0; i < blocks.length; i++) {
+                    if (String(blocks[i]).toLowerCase().indexOf(lower) !== -1) {
+                        found = i; break;
+                    }
+                }
+                if (found === -1) { setStatus('0/0'); return; }
+                state.idx = found;
+                render();
+                setStatus((found + 1) + '/' + blocks.length);
+            });
+
+            document.addEventListener('click', function (e) {
+                if (!findBar.classList.contains('open')) return;
+                if (findBar.contains(e.target)) return;
+                if (e.target === findBtn) return;
+                closeFind();
+            });
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape') closeFind();
+            });
+        })();
+
+        // ============================================================
         // PLAYLIST
         // ============================================================
         // ============================================================
@@ -1321,7 +1519,7 @@
         function __plPid() { return 'pl' + Date.now() + Math.floor(Math.random()*1000); }
 
         // In-memory only. Disk is the store. Nothing survives reload.
-        var __ST_CACHE = { index: null, blobs: {} };
+        var __ST_CACHE = { index: null, blobs: {}, hydratedOk: false };
 
         function __plIndexLoad() {
             return Array.isArray(__ST_CACHE.index) ? __ST_CACHE.index : [];
@@ -1349,6 +1547,10 @@
         function __plHydrateFromDisk() {
             if (typeof pLoad !== 'function') return Promise.resolve();
             return pLoad('subtitles', PL_INDEX_KEY, PL_INDEX_PATH).then(function (idx) {
+                // null = no server / 404 / unreachable. Distinguish that from
+                // "server returned an empty array", so migrate can tell a
+                // fresh install apart from a failed load.
+                __ST_CACHE.hydratedOk = Array.isArray(idx);
                 idx = Array.isArray(idx) ? idx : [];
                 __ST_CACHE.index = idx;
                 __ST_CACHE.blobs = {};
@@ -1613,6 +1815,10 @@
 
         function __plMigrateLegacy() {
             // Nothing to migrate: localStorage is gone.
+            // Only seed a default playlist on a genuinely fresh install:
+            // the index loaded OK and is empty. If the load failed (no
+            // server), stay empty and don't write.
+            if (!__ST_CACHE.hydratedOk) return;
             if (__plIndexLoad().length) return;
             __plCreate('default');
         }
@@ -1639,8 +1845,8 @@
             };
         })();
 
-        __plMigrateLegacy();
         __plHydrateFromDisk().then(function () {
+            __plMigrateLegacy();
             __plRender();
         });
 
