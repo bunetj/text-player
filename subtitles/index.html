@@ -2061,6 +2061,7 @@
         }
 
         function __chatRender() {
+            if (typeof chat === 'undefined' || !chat) return;
             var host = document.getElementById('chatList');
             if (!host) return;
             host.innerHTML = '';
@@ -2097,10 +2098,14 @@
             for (var i = 0; i < state.blocks.length; i++) {
                 var arr = chat.comments[String(i)] || [];
                 if (!arr.length) continue;
+                if (out.length) out.push('');
+                out.push('[script]');
+                out.push(state.blocks[i]);
+                out.push('');
                 var last = null;
                 arr.forEach(function (c) {
                     if (c.name !== last) {
-                        if (out.length && last !== null) out.push('');
+                        if (last !== null) out.push('');
                         out.push('[' + (c.name || 'you') + ']');
                         last = c.name;
                     }
