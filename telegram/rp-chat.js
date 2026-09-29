@@ -1080,17 +1080,9 @@ __ph('unknown command: ' + cmd);
                 var arr = snapshotFromDOM(msgs, state, autoPlay);
                 var ap  = autoplayFromState(autoPlay);
 
-                // Feed touch: only bump updatedAt when the message set
-                // actually changed. Renames, profile edits, perspective
-                // toggles and autoplay ticks all call saveState too, and
-                // must not move the row. lastLen tracks message count.
+                // Feed touch: bump the row for the currently-open chat.
                 try {
-                    var __prev = findFeedEntry(CHAT_ID);
                     var __touch = feedEntryFrom(state, arr, CHAT_ID);
-                    if (__prev && typeof __prev.lastLen === 'number' &&
-                        __prev.lastLen === arr.length) {
-                        __touch.updatedAt = __prev.updatedAt;
-                    }
                     upsertFeedEntry(__touch);
                 } catch (e) {}
 

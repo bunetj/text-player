@@ -64,7 +64,7 @@ window.MergedShell = (function () {
   function systemFolders() {
     return [
       { id: 'all',    name: '',            icon: '📁', isAll: true,  isSystem: true, folderIds: [] },
-      { id: 'unfold', name: 'Unfolderized',icon: '📭', isSystem: true, folderIds: [] },
+      { id: 'unfold', name: 'No folder',icon: '📭', isSystem: true, folderIds: [] },
       { id: 'archived', name: 'Archived',  icon: '📦', isSystem: true, folderIds: [] },
     ];
   }
@@ -773,8 +773,7 @@ window.MergedShell = (function () {
     var __defOther = (typeof __defaultOther === 'function') ? __defaultOther()
                     : { name: 'Liza', emoji: '👤', avatarColor: '#3a5a2b' };
     var fids = ['all'];
-    var __af = TGC.activeFolderId;
-    var af = (__af && __af !== 'all' && __af !== 'unfold' && __af !== 'archived') ? __af : null;
+    var af = (typeof __activeUserFolderId === 'function') ? __activeUserFolderId() : null;
     if (af) fids.push(af);
     arr.push({
       id: id,
@@ -814,9 +813,9 @@ window.MergedShell = (function () {
       var insertAt = 0;
       while (insertAt < TGC.folders.length && TGC.folders[insertAt].isSystem) insertAt++;
       TGC.folders.splice(insertAt, 0, f);
-    } else {
-      TGC.folders.push(f);
     }
+    // Editing an existing folder: `f` is already in TGC.folders (found by
+    // .find above). Do NOT push it again; mutating it in place is enough.
 
     folderModalEl.innerHTML =
       '<h3>' + (isNew ? 'New Folder' : 'Edit Folder') + '</h3>' +
@@ -870,6 +869,23 @@ window.MergedShell = (function () {
       }
       return ['all'];
     }
+    // working set: item ids currently marked as belonging to f.
+    // Seeded from disk, mutated by checkbox clicks, and used by Save.
+    // Independent of what is currently rendered, so a new search doesn't
+    // drop ticks you made before the search.
+    var working = { chat: {}, channel: {} };
+    (function seedWorking() {
+      chatList().forEach(function (c) {
+        var fids = Array.isArray(c.folderIds) ? c.folderIds : ['all'];
+        if (fids.indexOf(f.id) !== -1) working.chat[c.id] = true;
+      });
+      TGC.channels.forEach(function (c) {
+        if (Array.isArray(c.folderIds) && c.folderIds.indexOf(f.id) !== -1) {
+          working.channel[c.id] = true;
+        }
+      });
+    })();
+
     function renderFmList(q) {
       var box = folderModalEl.querySelector('#fm-list');
       if (!box) return;
@@ -895,9 +911,7 @@ window.MergedShell = (function () {
         return;
       }
       all.forEach(function (x) {
-        var on;
-        if (x.kind === 'chat') on = chatFolderIds(x.id).indexOf(f.id) !== -1;
-        else on = x.folderIds ? (x.folderIds.indexOf(f.id) !== -1) : false;
+        var on = !!working[x.kind][x.id];
 
         var lb = document.createElement('label');
         lb.innerHTML =
@@ -918,6 +932,19 @@ window.MergedShell = (function () {
     var searchInput = folderModalEl.querySelector('#fm-search');
     if (searchInput) searchInput.addEventListener('input', function () { renderFmList(this.value); });
 
+    // A checkbox click toggles working. Delegated to the list container
+    // so it survives the wholesale re-render on each search.
+    var fmList = folderModalEl.querySelector('#fm-list');
+    if (fmList) fmList.addEventListener('change', function (e) {
+      var inp = e.target;
+      if (!inp || inp.tagName !== 'INPUT' || inp.type !== 'checkbox') return;
+      var kind = inp.getAttribute('data-kind');
+      var id = inp.getAttribute('data-id');
+      if (!kind || !id) return;
+      if (inp.checked) working[kind][id] = true;
+      else            delete working[kind][id];
+    });
+
     folderModalEl.querySelector('#fm-cancel').onclick = function () {
       if (isNew) TGC.folders = TGC.folders.filter(function (x) { return x.id !== f.id; });
       folderOverlay.classList.remove('open');
@@ -927,15 +954,12 @@ window.MergedShell = (function () {
       f.icon = (folderModalEl.querySelector('#fm-icon').value || '').trim();
       f.color = folderModalEl.querySelector('#fm-colors').dataset.selected || null;
 
-      // apply include list to chats and channels
-      var pickedChats = [];
-      var pickedChans = [];
-      folderModalEl.querySelectorAll('#fm-list input:checked').forEach(function (i) {
-        var kind = i.getAttribute('data-kind');
-        var id = i.getAttribute('data-id');
-        if (kind === 'chat') pickedChats.push(id);
-        else pickedChans.push(id);
-      });
+      // apply include list to chats and channels from the working set,
+      // not from the DOM. The list only shows the current search, so
+      // reading input:checked would drop every tick made before the
+      // search.
+      var pickedChats = Object.keys(working.chat);
+      var pickedChans = Object.keys(working.channel);
 
       // chats -> update feed.json
       var feedArr = chatList().map(function (c) {
@@ -1131,8 +1155,7 @@ window.MergedShell = (function () {
       // New channel created while a user folder is active: file it there
       // too, in addition to whatever the modal checkboxes picked.
       if (isNew) {
-        var __af = TGC.activeFolderId;
-        var af = (__af && __af !== 'all' && __af !== 'unfold' && __af !== 'archived') ? __af : null;
+        var af = (typeof __activeUserFolderId === 'function') ? __activeUserFolderId() : null;
         if (af && folderIds.indexOf(af) === -1) folderIds.push(af);
       }
 

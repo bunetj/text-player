@@ -15,7 +15,7 @@
         }
 
         body {
-            background: #141414;
+            background: #000000;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             display: flex;
             justify-content: center;
@@ -39,8 +39,8 @@
             width: 100%;
             height: 70px;
             padding: 10px 14px;
-            background: #262626;
-            border: 1px solid #333333;
+            background: #1a1a1a;
+            border: 1px solid #2a2a2a;
             border-radius: 12px;
             color: #e8edf2;
             font-size: 13px;
@@ -55,10 +55,10 @@
             display: flex;
             flex-wrap: wrap;
             gap: 4px;
-            background: #262626;
+            background: #000000;
             border-radius: 12px;
             padding: 6px 10px;
-            border: 1px solid #333333;
+            border: 1px solid #2a2a2a;
             align-items: center;
         }
         .menu-section {
@@ -66,7 +66,7 @@
             align-items: center;
             gap: 3px;
             padding: 0 4px;
-            border-right: 1px solid #333333;
+            border-right: 1px solid #2a2a2a;
         }
         .menu-section:last-child { border-right: none; }
         .menu-label {
@@ -138,9 +138,9 @@
         .sub-wrap {
             flex: 0 0 432px;
             height: 432px;
-            background: #1c1c1c;
+            background: #222222;
             border-radius: 16px;
-            border: 1px solid #333333;
+            border: 1px solid #2a2a2a;
             display: flex;
             justify-content: center;
             align-items: flex-end;
@@ -180,7 +180,7 @@
         .bottom-bar .bar-play {
             font-size: 22px;
             color: #e8edf2;
-            background: #262626;
+            background: #1a1a1a;
             border-radius: 50%;
             width: 40px;
             height: 40px;
@@ -201,6 +201,143 @@
             padding: 6px 10px;
         }
         .bottom-bar .bar-gear:hover { color: #e8edf2; }
+        .bottom-bar .bar-chat {
+            position: absolute;
+            right: 40px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 18px;
+            color: #8e9aa5;
+            background: transparent;
+            padding: 6px 10px;
+        }
+        .bottom-bar .bar-chat:hover { color: #e8edf2; }
+
+        .chat-panel {
+            flex: 0 0 auto;
+            background: #000000;
+            border: 1px solid #2a2a2a;
+            display: none;
+            flex-direction: column;
+        }
+        .chat-panel.open { display: flex; }
+
+        .transcript-block {
+            flex: 0 0 auto;
+            background: #000000;
+            border: 1px solid #2a2a2a;
+            display: none;
+            flex-direction: column;
+            padding: 10px 12px;
+            gap: 8px;
+        }
+        .transcript-block.open { display: flex; }
+        .transcript-block .textbox-area textarea {
+            width: 100%;
+            height: 140px;
+            padding: 10px 14px;
+            background: #000000;
+            border: 1px solid #2a2a2a;
+            color: #e8edf2;
+            font-size: 13px;
+            resize: vertical;
+            font-family: inherit;
+            outline: none;
+        }
+        .chat-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            border-bottom: 1px solid #2a2a2a;
+            font-size: 12px;
+            color: #8e9aa5;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+            flex: 0 0 auto;
+        }
+        .chat-export {
+            background: transparent;
+            border: none;
+            color: #8e9aa5;
+            font-size: 15px;
+            cursor: pointer;
+            padding: 2px 6px;
+            font-family: inherit;
+        }
+        .chat-export:hover { color: #e8edf2; }
+        #chatList {
+            flex: 0 0 96px;
+            height: 96px;
+            overflow-y: auto;
+            padding: 8px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .chat-line {
+            font-size: 13px;
+            color: #e8edf2;
+            line-height: 1.4;
+            white-space: pre-wrap;
+            word-break: break-word;
+            padding: 2px 0;
+        }
+        .chat-line .chat-name {
+            color: #8e9aa5;
+        }
+        .chat-empty {
+            font-size: 12px;
+            color: #5e6f7e;
+        }
+        .chat-input-row {
+            display: flex;
+            gap: 6px;
+            padding: 8px 12px;
+            border-top: 1px solid #2a2a2a;
+            align-items: center;
+            flex: 0 0 auto;
+        }
+        .chat-input-row input.chat-name-input {
+            width: 72px;
+            flex: 0 0 auto;
+            background: transparent;
+            border: none;
+            color: #8e9aa5;
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 600;
+            padding: 4px 0;
+            outline: none;
+        }
+        .chat-input-row input.chat-text-input {
+            flex: 1;
+            min-width: 0;
+            background: #1a1a1a;
+            border: 1px solid #2a2a2a;
+            color: #e8edf2;
+            font-family: inherit;
+            font-size: 13px;
+            padding: 5px 8px;
+            outline: none;
+        }
+        .chat-input-row input.chat-text-input:focus { border-color: #7a7a7a; }
+        .chat-input-row button.chat-send {
+            flex: 0 0 auto;
+            background: #3a3a3a;
+            color: #e8edf2;
+            border: none;
+            padding: 5px 10px;
+            font-size: 13px;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .chat-input-row button.chat-send:hover { background: #4a4a4a; }
+
+        @media (hover: hover) and (pointer: fine) {
+            .chat-input-row button.chat-send { display: none; }
+        }
 
         @media (max-width: 440px) {
             .app { padding: 4px; min-height: 100vh; }
@@ -228,12 +365,12 @@
     display: flex;
 }
 .modal-box {
-    background: #262626;
+    background: #1a1a1a;
     padding: 24px;
     border-radius: 16px;
     max-width: 340px;
     width: 90%;
-    border: 1px solid #333333;
+    border: 1px solid #2a2a2a;
     color: #e8edf2;
     font-family: -apple-system, BlinkMacSystemFont,'Segoe UI', Roboto, sans-serif;
 }
@@ -290,7 +427,7 @@
     color: #8e9aa5;
 }
 .modal-box .btn-save {
-    background: #2b5278;
+    background: #3a3a3a;
     color: #e8edf2;
 }
 
@@ -349,7 +486,7 @@
         .playlist-list {
             max-height: 320px;
             overflow-y: auto;
-            border-top: 1px solid #333333;
+            border-top: 1px solid #2a2a2a;
         }
         .playlist-row {
             padding: 10px 16px;
@@ -359,17 +496,17 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            border-bottom: 1px solid #232323;
+            border-bottom: 1px solid #1a1a1a;
         }
         .playlist-row:last-child { border-bottom: none; }
         .playlist-row:hover { background: #333333; }
-        .playlist-row.active { background: #2b5278; color: #fff; }
+        .playlist-row.active { background: #3a3a3a; color: #fff; }
 
 
         .playlist-block {
             flex: 0 0 220px;
-            background: #1c1c1c;
-            border: 1px solid #333333;
+            background: #0a0a0a;
+            border: 1px solid #2a2a2a;
             overflow: hidden;
             display: flex;
             flex-direction: column;
@@ -379,7 +516,7 @@
             align-items: center;
             justify-content: space-between;
             padding: 8px 12px;
-            border-bottom: 1px solid #333333;
+            border-bottom: 1px solid #2a2a2a;
             font-size: 12px;
             color: #8e9aa5;
             text-transform: uppercase;
@@ -387,14 +524,14 @@
             font-weight: 600;
         }
         .playlist-block .playlist-new {
-            background: #262626;
+            background: #1a1a1a;
             color: #e8edf2;
             border: none;
             padding: 8px 12px;
             cursor: pointer;
             font-size: 13px;
             text-align: left;
-            border-bottom: 1px solid #232323;
+            border-bottom: 1px solid #1a1a1a;
         }
         .playlist-block .playlist-new:hover { background: #333333; }
 
@@ -422,7 +559,7 @@
         }
         .playlist-block .playlist-row-x:hover { color: #e57373; }
         .playlist-block .playlist-row.active .playlist-row-title {
-            background: #2b5278;
+            background: #3a3a3a;
             color: #fff;
         }
 
@@ -440,7 +577,7 @@
             flex: 1;
             background: transparent;
             border: none;
-            border-bottom: 1px solid #333333;
+            border-bottom: 1px solid #2a2a2a;
             color: #e8edf2;
             font-size: 13px;
             font-family: inherit;
@@ -448,7 +585,7 @@
             outline: none;
         }
         .find-bar input::placeholder { color: #5e6f7e; }
-        .find-bar input:focus { border-bottom-color: #7a7a7a; }
+        .find-bar input:focus { border-bottom-color: #6a6a6a; }
         .find-bar .find-status {
             font-size: 11px;
             color: #5e6f7e;
@@ -493,13 +630,13 @@
             flex: 0 0 auto;
             max-height: 320px;
             overflow-y: auto;
-            background: #141414;
-            border: 1px solid #333333;
+            background: #000000;
+            border: 1px solid #2a2a2a;
             padding: 12px;
         }
         .playlists-block .pl-block {
             margin-bottom: 18px;
-            background: #181818;
+            background: #0a0a0a;
             border: 1px solid #2a2a2a;
         }
         .playlists-block .pl-block:last-child { margin-bottom: 0; }
@@ -507,7 +644,7 @@
             display: flex; align-items: center; justify-content: space-between;
             padding: 10px 14px; font-size: 12px; color: #8e9aa5;
             text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;
-            background: #222222;
+            background: #151515;
         }
         .playlists-block .pl-head .pl-name {
             flex: 1; min-width: 0; overflow: hidden;
@@ -517,7 +654,7 @@
         .playlists-block .pl-head .pl-btn:hover { color: #e8edf2; }
         .playlists-block .pl-head .pl-btn.del:hover { color: #e57373; }
         .playlists-block .pl-new {
-            background: #202020; color: #e8edf2; border: none;
+            background: #1a1a1a; color: #e8edf2; border: none;
             padding: 10px 14px; cursor: pointer; font-size: 13px;
             text-align: left; width: 100%;
         }
@@ -562,7 +699,7 @@
             flex: 1;
             background: transparent;
             border: none;
-            border-bottom: 1px solid #333333;
+            border-bottom: 1px solid #2a2a2a;
             color: #e8edf2;
             font-size: 13px;
             font-family: inherit;
@@ -570,7 +707,7 @@
             outline: none;
         }
         .find-bar input::placeholder { color: #5e6f7e; }
-        .find-bar input:focus { border-bottom-color: #7a7a7a; }
+        .find-bar input:focus { border-bottom-color: #6a6a6a; }
         .find-bar .find-status {
             font-size: 11px;
             color: #5e6f7e;
@@ -602,7 +739,7 @@
             flex: 1;
             background: transparent;
             border: none;
-            border-bottom: 1px solid #333333;
+            border-bottom: 1px solid #2a2a2a;
             color: #e8edf2;
             font-size: 13px;
             font-family: inherit;
@@ -610,7 +747,7 @@
             outline: none;
         }
         .find-bar input::placeholder { color: #5e6f7e; }
-        .find-bar input:focus { border-bottom-color: #7a7a7a; }
+        .find-bar input:focus { border-bottom-color: #6a6a6a; }
         .find-bar .find-status {
             font-size: 11px;
             color: #5e6f7e;
@@ -631,7 +768,7 @@
 
         .playlist-new-playlist {
             display: block; width: 100%; padding: 12px 14px;
-            background: #262626; color: #c8d1da; border: none;
+            background: #1a1a1a; color: #c8d1da; border: none;
             cursor: pointer; font-size: 13px; text-align: left;
             margin-bottom: 14px;
         }
@@ -691,7 +828,20 @@
             <button class="menu-btn bar-text" id="textBtn" title="Text">📄</button>
             <button class="menu-btn bar-find" id="findBtn" title="Find">🔍</button>
             <button class="menu-btn bar-play" id="playBtn">▶</button>
+            <button class="menu-btn bar-chat" id="chatBtn" title="Live chat">💬</button>
             <button class="menu-btn bar-gear" id="gearBtn">⚙</button>
+        </div>
+
+                <div class="playlists-block" id="playlistsBlock" style="display:none;">
+            <button class="playlist-new-playlist" id="newPlaylistBtn">+ New playlist</button>
+            <div id="playlistsList"></div>
+        </div>
+
+        <div class="transcript-block" id="transcriptBlock">
+            <div class="textbox-area">
+                <textarea id="inputText" placeholder="Paste text with blank lines between subtitles"></textarea>
+            </div>
+            <div class="toolbar" id="toolbar-bottom"></div>
         </div>
 
         <div class="find-bar" id="findBar">
@@ -699,9 +849,17 @@
             <span class="find-status" id="findStatus"></span>
         </div>
 
-                <div class="playlists-block" id="playlistsBlock" style="display:none;">
-            <button class="playlist-new-playlist" id="newPlaylistBtn">+ New playlist</button>
-            <div id="playlistsList"></div>
+        <div class="chat-panel" id="chatBlock">
+            <div class="chat-head">
+                <span>Live chat</span>
+                <button class="chat-export" id="chatExport" title="Export">⧉</button>
+            </div>
+            <div id="chatList"></div>
+            <div class="chat-input-row">
+                <input type="text" class="chat-name-input" id="chatName" value="Alex" maxlength="24">
+                <input type="text" class="chat-text-input" id="chatText" placeholder="comment on this block…" autocomplete="off">
+                <button class="chat-send" id="chatSend">send</button>
+            </div>
         </div>
 
         <div class="settings-panel" id="settingsPanel">
@@ -721,15 +879,7 @@
         </div>
     </div>
 
-    <div class="modal" id="settingsModal">
-        <div class="modal-box settings">
-            <h3>Text</h3>
-            <div class="textbox-area" style="margin-top:8px;">
-                <textarea id="inputText" placeholder="Paste text with blank lines between subtitles"></textarea>
-            </div>
-            <div class="toolbar" id="toolbar-bottom"></div>
-        </div>
-    </div>
+
 
 <script src="../shared/persist.js"></script>
 <script src="../shared/modal.js"></script>
@@ -921,6 +1071,7 @@
             if (state.idx < 0) state.idx = 0;
             display.textContent = wrapText(state.blocks[state.idx]);
             __applyFontSizeLocal();
+            if (typeof __chatRender === 'function') __chatRender();
             saveState();
         }
 
@@ -1188,19 +1339,15 @@
                 });
             }
 
-            // 📄 opens the text modal (textarea + prep toolbar only).
+            // 📄 toggles the transcript panel.
             var textBtn = document.getElementById('textBtn');
-            var settingsModal = document.getElementById('settingsModal');
-            if (textBtn && settingsModal) {
-                textBtn.onclick = function () {
-                    if (typeof openModal === 'function') openModal('settingsModal');
-                    else settingsModal.classList.add('active');
-                };
-                settingsModal.onclick = function (e) {
-                    if (e.target === settingsModal) {
-                        if (typeof closeModal === 'function') closeModal('settingsModal');
-                        else settingsModal.classList.remove('active');
-                    }
+            var transcriptBlock = document.getElementById('transcriptBlock');
+            if (textBtn && transcriptBlock) {
+                textBtn.onclick = function (e) {
+                    e.stopPropagation();
+                    transcriptBlock.classList.toggle('open');
+                    try { sessionStorage.setItem('st_tx_open',
+                        transcriptBlock.classList.contains('open') ? '1' : '0'); } catch (err) {}
                 };
             }
         }
@@ -1344,12 +1491,15 @@
                 e.stopPropagation();
                 if (findBar.classList.contains('open')) closeFind();
                 else openFind();
+                try { sessionStorage.setItem('st_fd_open',
+                    findBar.classList.contains('open') ? '1' : '0'); } catch (err) {}
             });
 
             findInput.addEventListener('keydown', function (e) {
                 if (e.key === 'Escape') {
                     e.preventDefault();
                     closeFind();
+                    try { sessionStorage.setItem('st_fd_open', '0'); } catch (err) {}
                     return;
                 }
                 if (e.key !== 'Enter') return;
@@ -1660,6 +1810,8 @@
             for (var i = 0; i < blob.items.length; i++) {
                 if (blob.items[i].id === state.currentItemId) {
                     blob.items[i].text = input.value || '';
+                    blob.items[i].comments = chat.comments;
+                    blob.items[i].name = chat.name;
                     blob.items[i].updatedAt = Date.now();
                     break;
                 }
@@ -1683,6 +1835,7 @@
             if (!item) return;
             state.currentPlaylistId = pid;
             state.currentItemId = itemId;
+            if (typeof __chatLoadFromItem === 'function') __chatLoadFromItem(item);
             input.value = item.text || '';
             state.blocks = splitBlocks(item.text || '');
             state.hasContent = state.blocks.length > 0;
@@ -1810,6 +1963,7 @@
             if (!el) return;
             var open = (typeof force === 'boolean') ? force : (el.style.display === 'none');
             el.style.display = open ? 'block' : 'none';
+            try { sessionStorage.setItem('st_pl_open', open ? '1' : '0'); } catch (e) {}
             if (open) __plRender();
         }
 
@@ -1850,9 +2004,194 @@
             __plRender();
         });
 
+        // LAYER 2: chat button toggles the panel open/closed.
+        var __chatOpen = false;
+        (function () {
+            var btn = document.getElementById('chatBtn');
+            var panel = document.getElementById('chatBlock');
+            if (!btn || !panel) return;
+            btn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                __chatOpen = !__chatOpen;
+                panel.classList.toggle('open', __chatOpen);
+                try { sessionStorage.setItem('st_ch_open', __chatOpen ? '1' : '0'); } catch (err) {}
+            });
+        })();
+
+        // Layer 2.5: if a duplicate .chat-block still exists in the CSS,
+        // it's dead — the live panel is .chat-panel. Nothing to do.
+
+        // LAYER 5: storage + render. Panel shows the current block's
+        // comments. Switching blocks switches the panel.
+        var chat = {
+            comments: {},
+            name: 'Alex',
+        };
+
+        function __chatLoadFromItem(item) {
+            chat.comments = {};
+            if (item && item.comments && typeof item.comments === 'object') {
+                for (var k in item.comments) {
+                    if (Object.prototype.hasOwnProperty.call(item.comments, k)) {
+                        chat.comments[k] = item.comments[k].slice();
+                    }
+                }
+            }
+            if (item && typeof item.name === 'string' && item.name) {
+                chat.name = item.name;
+            }
+            var nameEl = document.getElementById('chatName');
+            if (nameEl) nameEl.value = chat.name;
+        }
+
+        function __chatSaveToItem() {
+            if (!state.currentItemId || !state.currentPlaylistId) return;
+            var blob = __plBlobLoad(state.currentPlaylistId);
+            if (!blob) return;
+            for (var i = 0; i < blob.items.length; i++) {
+                if (blob.items[i].id === state.currentItemId) {
+                    blob.items[i].comments = chat.comments;
+                    blob.items[i].name = chat.name;
+                    blob.items[i].updatedAt = Date.now();
+                    break;
+                }
+            }
+            blob.updatedAt = Date.now();
+            __plBlobSave(blob);
+        }
+
+        function __chatRender() {
+            var host = document.getElementById('chatList');
+            if (!host) return;
+            host.innerHTML = '';
+            // Accumulating, like YouTube: show every comment from block 0
+            // up to and including the current block. Nothing drops when
+            // you move on.
+            var any = false;
+            for (var i = 0; i <= state.idx; i++) {
+                var arr = chat.comments[String(i)] || [];
+                for (var j = 0; j < arr.length; j++) {
+                    any = true;
+                    var c = arr[j];
+                    var row = document.createElement('div');
+                    row.className = 'chat-line';
+                    var n = document.createElement('span');
+                    n.className = 'chat-name';
+                    n.textContent = (c.name || 'you') + ': ';
+                    row.appendChild(n);
+                    row.appendChild(document.createTextNode(c.text || ''));
+                    host.appendChild(row);
+                }
+            }
+            if (!any) {
+                var e = document.createElement('div');
+                e.className = 'chat-empty';
+                e.textContent = 'no comments yet';
+                host.appendChild(e);
+            }
+            host.scrollTop = host.scrollHeight;
+        }
+
+        function __chatExportText() {
+            var out = [];
+            for (var i = 0; i < state.blocks.length; i++) {
+                var arr = chat.comments[String(i)] || [];
+                if (!arr.length) continue;
+                var last = null;
+                arr.forEach(function (c) {
+                    if (c.name !== last) {
+                        if (out.length && last !== null) out.push('');
+                        out.push('[' + (c.name || 'you') + ']');
+                        last = c.name;
+                    }
+                    out.push(c.text || '');
+                });
+            }
+            return out.join('\n');
+        }
+
+        (function () {
+            var exp = document.getElementById('chatExport');
+            if (exp) {
+                exp.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    var txt = __chatExportText();
+                    if (!txt) return;
+                    navigator.clipboard.writeText(txt).then(function () {
+                        exp.textContent = '✓';
+                        setTimeout(function () { exp.textContent = '⧉'; }, 900);
+                    }).catch(function () {});
+                });
+            }
+        })();
+
+        (function () {
+            var send = document.getElementById('chatSend');
+            var txt  = document.getElementById('chatText');
+            var nm   = document.getElementById('chatName');
+            if (!send || !txt) return;
+
+            function submit() {
+                var v = (txt.value || '').trim();
+                if (!v) return;
+                var key = String(state.idx);
+                if (!chat.comments[key]) chat.comments[key] = [];
+                chat.comments[key].push({ name: chat.name || 'you', text: v });
+                txt.value = '';
+                txt.focus();
+                __chatRender();
+                __chatSaveToItem();
+            }
+
+            send.addEventListener('click', submit);
+            txt.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    submit();
+                }
+            });
+            if (nm) {
+                nm.addEventListener('input', function () {
+                    chat.name = this.value || 'you';
+                    __chatSaveToItem();
+                });
+            }
+        })();
+
         input.addEventListener('input', function () {
             __plSaveCurrentIntoItem();
         });
+
+        // Restore find bar open state.
+        (function () {
+            try {
+                if (sessionStorage.getItem('st_fd_open') === '1') {
+                    var fb = document.getElementById('findBar');
+                    if (fb) fb.classList.add('open');
+                }
+            } catch (e) {}
+        })();
+
+        // Restore panel open/closed state from sessionStorage.
+        (function () {
+            try {
+                if (sessionStorage.getItem('st_pl_open') === '1') __plToggle(true);
+            } catch (e) {}
+            try {
+                if (sessionStorage.getItem('st_ch_open') === '1') {
+                    __chatOpen = true;
+                    var cp = document.getElementById('chatBlock');
+                    if (cp) cp.classList.add('open');
+                    if (typeof __chatRender === 'function') __chatRender();
+                }
+            } catch (e) {}
+            try {
+                if (sessionStorage.getItem('st_tx_open') === '1') {
+                    var tb = document.getElementById('transcriptBlock');
+                    if (tb) tb.classList.add('open');
+                }
+            } catch (e) {}
+        })();
 
 
 </script>

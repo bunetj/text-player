@@ -1,73 +1,105 @@
-
 # text player
 
+*something will not work
 
+## overview
 
-_display text in different existing social interfaces._
+main sim-s now
 
-just a demo. https://bunetj.github.io/text-player/
+- subtitles
+- telegram
+- discord
 
-the main simulators now are
+why
 
-- subtitles, 
-- telegram and 
-- discord.
+some usage cases
 
-the interaction types are basically
+- you already read transcripts instead of watching a video
+- your reading notes are already especially frequent or informal like it's a live chat or even direct messages
+- you already fall into rehearsing social situations in self-messages
+- you already keep hidden blogs like personal notes
+- you already expect those platforms to fill your time while struggling with reading through long or planned items
 
-- roleplay and 
-- reader
+if any of these lands, you might want to look at this copy of a hat you could not stop touching at the shop.
 
-you can 
+demo (partial func-ty):
 
-- watch a text like subtitles, 
-- "chat to pdf" (play a text like someone messages you and answer back), 
-- chat to yourself (two or multiple personas), 
-- keep personal notes like telegram channels. 
+https://bunetj.github.io/text-player/
 
-various subtle features, such as 
+## how content is managed
 
-- going to the specific place in the text or 
-- having a folders system in the user interface.
+**local**: works offline, opens in the browser; writes json, md.
 
-## management of texts
+export:
 
-**local**: the app works offline, in the browser, with the writing of local files (json or md).
+- chats (ds, tg): clipboard; json
+- tg channels: md
 
-export options: 
+made for local use: you keep heavy texts, convert hoarder's readings.
 
-- for chats, ie discord/telegram: export to clipboard + writes json files; 
-- for telegram channels: writes md files.
+## usage cases with importing
 
-the app is made for the local use, bc you import and keep heavy texts, and it is not like you try to have them online.
+you can just paste too.
 
-## import from files
+### import from txt to ui
 
-for web pages: convert to txt somehow.
+#1 have the files
 
-### readings.py
+have a folder/s with txt files or specific txt file/s.
 
-typical commands
+web pages: convert to txt, eg copypaste or scrape with some script or addon to many .txt files
 
-from a folder or file to readings/ (pdf, epub, docx to txt):
+videos: download transcripts, eg https://savesubs.com
+
+#2 add to the root
+
+for one file:
 
 ```
-py readings.py convert c:\books --recursive
+py readings.py add [file's path]
 ```
 
-the whole readings/ folder to tg:
+for folders:
+
+```
+py readings.py add [folder/s' path] --recursive
+```
+
+adds files to readings/, the folder structure mirrored
+
+#3 import to some app
 
 ```
 py readings.py import --app tg --chat "pdf low punct rem"
 ```
 
-some file to tg:
+creates mirrored chat folders in the tg sim
+
+apps:
 
 ```
-py readings.py import readings\text.txt --app tg --chat "pdf low punct rem"
+--app [tg|st|ds]
+```
+
+### just convert to chat style
+
+if you don't want to use the user interfaces, you can just fragmentize a long text:
+
+```
+format.py [file/ folder/s path] --chat "pdf low punct rem" --sep newline
+```
+
+this script is standalone. works with folders too. creates a copy that ends with _chat. eg, you can open the formatted text in a narrow notepad window, white on black, consolas monospace.
+
+another experimental use is splitting the book by markers, you marker parts of text with the `<<<marker>>>` by manually walking through a .txt file and get chapters as separate text files.
+
+```
+format.py split [txt/folder/s path]
 ```
 
 ### chat style formatters
+
+the operators for the --chat flag
 
 ```
 punct     split on punctuation, keep punctuation

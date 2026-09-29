@@ -1,9 +1,18 @@
 # code/readings.py
-# Two verbs.
+# Three verbs.
 #
-#   python code/readings.py convert <path> [--recursive]
+#   python code/readings.py add <path> [--recursive]
 #       Any format -> code/readings/<mirror of rel path>/<stem>.txt
 #       Idempotent: skips if the .txt already exists.
+#
+#   python code/readings.py format <path> --chat "pdf low punct" [--sep blank|newline]
+#       Plain formatter. File -> <stem>_chat.txt beside it.
+#       Folder -> mirrored <name>_chat/ next to the folder, with every
+#       inner .txt formatted into a matching _chat.txt.
+#
+#       --sep blank    (default)  \n\n between blocks
+#       --sep newline             \n  between blocks
+#       No --- is ever emitted. Source files are never modified.
 #
 #   python code/readings.py import --app tg|ds|st [--chat "pdf low punct"]
 #       Walks code/readings/**. Each .txt becomes one item in the target.
@@ -13,7 +22,10 @@
 #       Top-level .txt (no subfolder) -> name "readings", slug "readings".
 #       Idempotent: skips if the title already exists in the target.
 #
-#   --chat ops applied in memory only; the .txt is never modified.
+#       Separator depends on the app: tg uses \n---\n, st/ds use \n\n.
+#       That is separate from `format`, which always uses \n\n.
+#
+#   --chat ops applied in memory only; no source .txt is modified.
 
 import io, os, re, sys, json, time, shutil, zipfile, subprocess, unicodedata
 
@@ -34,7 +46,7 @@ ST_DATA   = os.path.join(HERE, "subtitles", "data")
 ST_PL_INDEX = os.path.join(ST_DATA, "playlists.json")
 ST_PL_DIR   = os.path.join(ST_DATA, "playlists")
 
-CONVERT_EXTS = (".txt", ".md", ".epub", ".pdf", ".docx")
+add_EXTS = (".txt", ".md", ".epub", ".pdf", ".docx")
 
 DEFAULT_PEOPLE = {
     "own":   {"name":"Alex","emoji":"\U0001F642","avatarColor":"#2b5278",
@@ -50,13 +62,13 @@ DEFAULT_BOT = {"active": False, "answers": [
     "\u0447\u0437\u0445","\u043f\u0437\u0434\u0446","\u043c\u0433\u043c","\u043b\u0430\u0434\u043d\u043e",
 ]}
 
-# ---------- converters ----------
+# ---------- adders ----------
 
-def convert_txt(path):
+def add_txt(path):
     with io.open(path, "r", encoding="utf-8", errors="replace") as f:
         return f.read()
 
-def convert_epub(path):
+def add_epub(path):
     with zipfile.ZipFile(path) as z:
         opf = None
         for n in z.namelist():
@@ -87,7 +99,7 @@ def convert_epub(path):
             if raw: parts.append(raw)
         return "\n\n".join(parts)
 
-def convert_pdf(path):
+def add_pdf(path):
     exe = shutil.which("pdftotext")
     if not exe:
         raise RuntimeError("pdftotext not on PATH (install Poppler)")
@@ -97,7 +109,7 @@ def convert_pdf(path):
         raise RuntimeError("pdftotext failed: " + r.stderr.decode("utf-8","replace")[:200])
     return r.stdout.decode("utf-8", "replace")
 
-def convert_docx(path):
+def add_docx(path):
     with zipfile.ZipFile(path) as z:
         try:
             xml = z.read("word/document.xml").decode("utf-8", "replace")
@@ -115,118 +127,17 @@ def convert_docx(path):
         if txt: out.append(txt)
     return "\n\n".join(out)
 
-converterS = {".txt": convert_txt, ".md": convert_txt,
-              ".epub": convert_epub, ".pdf": convert_pdf,
-              ".docx": convert_docx}
+adderS = {".txt": add_txt, ".md": add_txt,
+              ".epub": add_epub, ".pdf": add_pdf,
+              ".docx": add_docx}
 
-# ---------- /chat ops ----------
-
+# Ops live in format.py. They are separator-agnostic: this file
+# picks the separator per app and passes it in. format.py never
+# emits ---; only tg here uses it, because tg can carry blank lines
+# inside a single message.
 SEP = "\n---\n"
 
-def __blocks(s, sep=SEP):
-    return [b.strip() for b in s.split(sep) if b.strip()]
-def __join(arr, sep=SEP):
-    return sep.join(arr)
-
-def op_pdf(s):
-    lines = s.split("\n"); out = []; buf = ""
-    for ln in lines:
-        if ln.strip() == "":
-            if buf.strip(): out.append(buf.strip())
-            buf = ""
-        else:
-            if buf:
-                if buf.endswith(("-", "\u2013", "\u2014")):
-                    buf = buf[:-1] + ln.lstrip()
-                else:
-                    buf = buf + " " + ln.strip()
-            else:
-                buf = ln.strip()
-    if buf.strip(): out.append(buf.strip())
-    return "\n\n".join(out)
-
-def op_low(s):
-    s = s.replace("\u201c", '"').replace("\u201d", '"').replace("\u201e", '"')
-    s = s.replace("\u2018", "'").replace("\u2019", "'")
-    return s.lower()
-
-PUNCT_SPLIT = ".!?;:,"
-
-def op_punct(s, sep=SEP):
-    out = []
-    for b in __blocks(s, sep):
-        buf = ""; i = 0; n = len(b)
-        while i < n:
-            ch = b[i]
-            if ch in PUNCT_SPLIT:
-                prev = b[i-1] if i > 0 else ""
-                nxt  = b[i+1] if i+1 < n else ""
-                if prev.isalpha() and nxt.isalpha():
-                    buf += ch; i += 1; continue
-                buf += ch
-                if buf.strip(): out.append(buf.strip())
-                buf = ""
-                while i+1 < n and b[i+1].isspace(): i += 1
-            else:
-                buf += ch
-            i += 1
-        if buf.strip(): out.append(buf.strip())
-    return __join(out, sep)
-
-def op_rem(s, sep=SEP):
-    out = []
-    for b in __blocks(s, sep):
-        t = "".join(c for c in b if not unicodedata.category(c).startswith("P")).strip()
-        if t: out.append(t)
-    return __join(out, sep)
-
-def op_lines(s, sep=SEP):
-    parts = [p.strip() for p in re.split(r"\n+", s) if p.strip()]
-    return __join(parts, sep)
-
-def op_line(s, sep=SEP):
-    parts = [p.strip() for p in __blocks(s, sep) if p.strip()]
-    return " ".join(parts)
-
-def split_sentences(text):
-    return [p for p in re.split(r'(?<=[\.\!\?\u2026])\s+', text) if p]
-
-def op_sent(s, sep=SEP):
-    out = []
-    for b in __blocks(s, sep):
-        for piece in split_sentences(b):
-            piece = piece.strip()
-            if piece: out.append(piece)
-    return __join(out, sep)
-
-def op_chunk(s, n, sep=SEP):
-    out = []
-    for b in __blocks(s, sep):
-        words = [w for w in re.split(r"\s+", b) if w]
-        for i in range(0, len(words), n):
-            out.append(" ".join(words[i:i+n]))
-    return __join(out, sep)
-
-def apply_ops(text, ops, sep=SEP):
-    i = 0
-    while i < len(ops):
-        op = ops[i].lower()
-        if op == "pdf":   text = op_pdf(text)
-        elif op == "low": text = op_low(text)
-        elif op == "punct": text = op_punct(text, sep)
-        elif op == "rem": text = op_rem(text, sep)
-        elif op == "lines": text = op_lines(text, sep)
-        elif op == "line": text = op_line(text, sep)
-        elif op == "sent": text = op_sent(text, sep)
-        elif op == "chunk":
-            if i+1 >= len(ops): raise SystemExit("chunk needs N")
-            try: n = int(ops[i+1])
-            except: raise SystemExit("chunk N: bad N")
-            text = op_chunk(text, n, sep); i += 1
-        else:
-            raise SystemExit("unknown op: " + op)
-        i += 1
-    return text
+from format import apply_ops  # noqa: E402
 
 # ---------- helpers ----------
 
@@ -262,9 +173,9 @@ def folder_name_for(rel):
     if not rel: return "readings"
     return rel
 
-# ---------- convert ----------
+# ---------- add ----------
 
-def do_convert(path, recursive):
+def do_add(path, recursive):
     path = os.path.abspath(path)
     if not os.path.exists(path):
         print("not found: " + path); return
@@ -282,10 +193,10 @@ def do_convert(path, recursive):
         if os.path.isfile(out):
             print("skip (exists): " + os.path.relpath(out, HERE)); return
         ext = os.path.splitext(fp)[1].lower()
-        fn = converterS.get(ext)
+        fn = adderS.get(ext)
         if not fn:
             print("skip (unsupported): " + fp); return
-        print("converting: " + stem)
+        print("adding: " + stem)
         try: text = fn(fp)
         except Exception as e:
             print("  FAILED: " + str(e)); return
@@ -302,12 +213,12 @@ def do_convert(path, recursive):
         if recursive:
             for dirpath, _dirs, files in os.walk(path):
                 for n in sorted(files):
-                    if n.lower().endswith(CONVERT_EXTS):
+                    if n.lower().endswith(add_EXTS):
                         one(os.path.join(dirpath, n))
         else:
             for n in sorted(os.listdir(path)):
                 full = os.path.join(path, n)
-                if os.path.isfile(full) and full.lower().endswith(CONVERT_EXTS):
+                if os.path.isfile(full) and full.lower().endswith(add_EXTS):
                     one(full)
     print("done.")
 
@@ -587,12 +498,14 @@ def main():
     argv = sys.argv[1:]
     if not argv:
         print("usage:")
-        print('  python code/readings.py convert <path> [--recursive]')
+        print('  python code/readings.py add <path> [--recursive]')
         print('  python code/readings.py import --app tg|ds|st [--chat "pdf low punct"]')
+        print('')
+        print('  (plain formatter lives in code/format.py)')
         sys.exit(1)
 
     verb = argv[0]; argv = argv[1:]
-    recursive = False; chat_ops = []; app = None; target = None
+    recursive = False; chat_ops = []; app = None; target = None; sep_name = None
     i = 0
     while i < len(argv):
         a = argv[i]
@@ -604,12 +517,15 @@ def main():
         elif a == "--app":
             if i+1 >= len(argv): print("--app needs a value"); sys.exit(1)
             app = argv[i+1].lower(); i += 2
+        elif a == "--sep":
+            if i+1 >= len(argv): print("--sep needs a value (blank | newline)"); sys.exit(1)
+            sep_name = argv[i+1].lower(); i += 2
         else:
             target = a; i += 1
 
-    if verb == "convert":
-        if not target: print("usage: convert <path> [--recursive]"); sys.exit(1)
-        do_convert(target, recursive)
+    if verb == "add":
+        if not target: print("usage: add <path> [--recursive]"); sys.exit(1)
+        do_add(target, recursive)
     elif verb == "import":
         do_import(app, chat_ops)
     else:
