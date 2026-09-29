@@ -1835,6 +1835,10 @@
             if (!item) return;
             state.currentPlaylistId = pid;
             state.currentItemId = itemId;
+            try {
+                sessionStorage.setItem('st_last_pl', pid);
+                sessionStorage.setItem('st_last_item', itemId);
+            } catch (e) {}
             if (typeof __chatLoadFromItem === 'function') __chatLoadFromItem(item);
             input.value = item.text || '';
             state.blocks = splitBlocks(item.text || '');
@@ -2002,6 +2006,17 @@
         __plHydrateFromDisk().then(function () {
             __plMigrateLegacy();
             __plRender();
+            // Restore last-loaded item, or fall back to default.
+            try {
+                var pid = sessionStorage.getItem('st_last_pl');
+                var iid = sessionStorage.getItem('st_last_item');
+                if (pid && iid) {
+                    __plLoadItemIntoApp(pid, iid);
+                } else {
+                    __plEnsureDefaultItem();
+                    render();
+                }
+            } catch (e) {}
         });
 
         // LAYER 2: chat button toggles the panel open/closed.
@@ -2045,6 +2060,12 @@
         }
 
         function __chatSaveToItem() {
+            // Always write to the global livechat file. If an item is loaded,
+            // also mirror into the item's blob so it travels with the item.
+            if (typeof pSave === 'function') {
+                pSave('subtitles', 'subtitles_livechat_v1', 'livechat.json',
+                      { comments: chat.comments, name: chat.name, updatedAt: Date.now() });
+            }
             if (!state.currentItemId || !state.currentPlaylistId) return;
             var blob = __plBlobLoad(state.currentPlaylistId);
             if (!blob) return;
@@ -2164,8 +2185,65 @@
         })();
 
         input.addEventListener('input', function () {
+            // Auto-attach to a default item if nothing is loaded, so text
+            // and comments have somewhere to persist.
+            if (!state.currentItemId) {
+                __plEnsureDefaultItem();
+            }
             __plSaveCurrentIntoItem();
         });
+
+        function __plEnsureDefaultItem() {
+            var idx = __plIndexLoad();
+            var pid = null;
+            for (var i = 0; i < idx.length; i++) {
+                if (idx[i] && idx[i].name === 'default') { pid = idx[i].id; break; }
+            }
+            if (!pid) pid = __plCreate('default');
+            var blob = __plBlobLoad(pid);
+            if (!blob) return;
+            var itemId = null;
+            if (!blob.items || !blob.items.length) {
+                itemId = __plId();
+                blob.items = blob.items || [];
+                blob.items.push({
+                    id: itemId,
+                    title: 'default',
+                    text: input.value || '',
+                    comments: chat.comments || {},
+                    name: chat.name || 'Alex',
+                    updatedAt: Date.now()
+                });
+                blob.updatedAt = Date.now();
+                __plBlobSave(blob);
+            } else {
+                itemId = blob.items[0].id;
+            }
+            state.currentPlaylistId = pid;
+            state.currentItemId = itemId;
+            try {
+                sessionStorage.setItem('st_last_pl', pid);
+                sessionStorage.setItem('st_last_item', itemId);
+            } catch (e) {}
+        }
+
+        // Load the global livechat on boot. When an item is loaded later,
+        // __chatLoadFromItem replaces these with the item's own comments.
+        (function () {
+            if (typeof pLoad !== 'function') return;
+            pLoad('subtitles', 'subtitles_livechat_v1', 'livechat.json').then(function (d) {
+                if (!d || typeof d !== 'object') return;
+                if (d.comments && typeof d.comments === 'object') {
+                    chat.comments = d.comments;
+                }
+                if (typeof d.name === 'string' && d.name) {
+                    chat.name = d.name;
+                    var nm = document.getElementById('chatName');
+                    if (nm) nm.value = chat.name;
+                }
+                if (typeof __chatRender === 'function') __chatRender();
+            }).catch(function () {});
+        })();
 
         // Restore find bar open state.
         (function () {
@@ -2176,6 +2254,17 @@
                 }
             } catch (e) {}
         })();
+
+        // Restore the last-loaded playlist item. Comments and text come
+        // back with it. Runs after __plHydrateFromDisk resolves so the
+        // blobs are in the cache.
+        __plHydrateFromDisk().then(function () {
+            try {
+                var pid = sessionStorage.getItem('st_last_pl');
+                var iid = sessionStorage.getItem('st_last_item');
+                if (pid && iid) __plLoadItemIntoApp(pid, iid);
+            } catch (e) {}
+        });
 
         // Restore panel open/closed state from sessionStorage.
         (function () {
