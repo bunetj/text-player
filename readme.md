@@ -1,13 +1,13 @@
 # text player
 
-do you already
+i already do
 
 - rehearse situations in self-messages
 - keep notes in chats
 - watch videos but not texts
 - write notes in chat style
 
-then here is a copy of a hat you kept touching at the shop.
+so here is a copy of a hat i kept touching at the shop.
 
 main sims now: subtitles, telegram, discord.
 
@@ -23,9 +23,9 @@ https://bunetj.github.io/text-player/
 
 works offline etc. writes json, md, also exports to clipboard. made for local use.
 
-## usage
+## install
 
-install in c:\portable apps eg
+download in c:\portable apps eg
 
 ## import
 
