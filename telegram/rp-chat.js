@@ -1159,7 +1159,7 @@ if (d.currentPerspective === 'own' || d.currentPerspective === 'other') {
                 for (var i = 0; i < d.msgs.length; i++) {
                     var m = d.msgs[i];
                     var author = m.a || 'own';
-                    var el = createMsgNode(m.t, author, m.d || 0, !!m.r, p);
+                    var el = createMsgNode(m.t, author, m.d || 0, !!m.r, p, (state.people[author]||{}).avatarColor||null);
                     msgs.appendChild(el);
                 }
             }
@@ -1573,7 +1573,7 @@ if (d.currentPerspective === 'own' || d.currentPerspective === 'other') {
                     msgs.innerHTML = '';
                     for (var i = 0; i < this.savedSnapshot.length; i++) {
                         var m = this.savedSnapshot[i];
-                        var el = createMsgNode(m.text, m.author, m.delay || 0, !!m.reacted, state.currentPerspective);
+                        var el = createMsgNode(m.text, m.author, m.delay || 0, !!m.reacted, state.currentPerspective, (state.people[m.author]||{}).avatarColor||null);
                         msgs.appendChild(el);
                     }
                     applyFontSize(msgs, state.fontSize);
@@ -1615,7 +1615,7 @@ if (d.currentPerspective === 'own' || d.currentPerspective === 'other') {
                     var pm = this.playbackDom[pi];
                     // addMsgSilent would append to playbackDom again, so
                     // build the DOM node manually here.
-                    var pEl = createMsgNode(pm.text, pm.author, pm.delay || 0, false, state.currentPerspective);
+                    var pEl = createMsgNode(pm.text, pm.author, pm.delay || 0, false, state.currentPerspective, (state.people[pm.author]||{}).avatarColor||null);
                     msgs.appendChild(pEl);
                 }
                 applyFontSize(msgs, state.fontSize);
@@ -1957,7 +1957,7 @@ if (d.currentPerspective === 'own' || d.currentPerspective === 'other') {
                     var __m = __c.msgs[__i];
                     var __author = __m.a || 'own';
                     msgs.appendChild(
-                        createMsgNode(__m.t, __author, __m.d || 0, !!__m.r, __p)
+                        createMsgNode(__m.t, __author, __m.d || 0, !!__m.r, __p, (state.people[__author]||{}).avatarColor||null)
                     );
                 }
                 // Land on the bottom before painting, same as the fetch

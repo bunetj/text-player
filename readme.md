@@ -50,7 +50,7 @@ py readings.py import --app tg --chat "pdf low punct rem"
 
 this imports to an app and formats in chat style as you prefer.
 
-### format to chat
+### format to chat style
 
 you can go without apps:
 

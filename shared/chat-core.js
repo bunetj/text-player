@@ -5,13 +5,14 @@
 //   author: 'own' | 'other' (absolute, never changes)
 //   returns a <div class="msg bubble ..."> node, NOT attached.
 //   author === 'other' -> rendered via __md(); else plain text.
-function createMsgNode(text, author, delay, reacted, perspective) {
+function createMsgNode(text, author, delay, reacted, perspective, avatarColor) {
     var isMine = (author === perspective);
     var d = document.createElement('div');
     d.setAttribute('data-author', author);
     d.setAttribute('data-raw', text);
     d.setAttribute('data-delay', String(delay || 0));
     d.className = 'msg bubble ' + (isMine ? 'own' : 'recv');
+    if (avatarColor) d.style.setProperty('--bq-color', avatarColor);
     if (reacted) d.classList.add('reacted');
     var _w = document.createElement('div'); _w.className = 'bubble-content-wrapper';
     var _c = document.createElement('div'); _c.className = 'bubble-content';
@@ -152,7 +153,8 @@ function chatAddMsg(app, text, author, opts) {
         app._lastSendAt = now;
     }
 
-    var node = createMsgNode(text, author, delay, false, perspective);
+    var node = createMsgNode(text, author, delay, false, perspective,
+        (state.people && state.people[author] && state.people[author].avatarColor) || null);
     msgs.appendChild(node);
     app.applyFontSize();
 
