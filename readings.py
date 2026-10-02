@@ -31,18 +31,18 @@ import io, os, re, sys, json, time, shutil, zipfile, subprocess, unicodedata
 
 HERE      = os.path.dirname(os.path.abspath(__file__))     # code/
 READINGS  = os.path.join(HERE, "readings")
-READINGS_IMPORTED = os.path.join(HERE, "readings_imported")
+READINGS_IMPORTED = os.path.join(HERE, "data", "readings_imported")
 
-TG_DATA   = os.path.join(HERE, "telegram", "data")
+TG_DATA   = os.path.join(HERE, "data", "telegram")
 TG_CHATS  = os.path.join(TG_DATA, "chats")
 TG_FEED   = os.path.join(TG_DATA, "feed.json")
 TG_FOLDERS = os.path.join(TG_DATA, "folders.md")
 
-DS_DATA   = os.path.join(HERE, "discord", "data")
+DS_DATA   = os.path.join(HERE, "data", "discord")
 DS_CHATS  = os.path.join(DS_DATA, "chats")
 DS_FEED   = os.path.join(DS_DATA, "feed.json")
 
-ST_DATA   = os.path.join(HERE, "subtitles", "data")
+ST_DATA   = os.path.join(HERE, "data", "subtitles")
 ST_PL_INDEX = os.path.join(ST_DATA, "playlists.json")
 ST_PL_DIR   = os.path.join(ST_DATA, "playlists")
 

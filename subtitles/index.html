@@ -16,7 +16,7 @@
 
         body {
             background: #000000;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI Emoji', 'Segoe UI', Roboto, sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -137,7 +137,7 @@
 
         .sub-wrap {
             flex: 0 0 432px;
-            height: 432px;
+            height: 350px;
             background: #222222;
             border-radius: 16px;
             border: 1px solid #2a2a2a;
@@ -268,8 +268,8 @@
         }
         .chat-export:hover { color: #e8edf2; }
         #chatList {
-            flex: 0 0 96px;
-            height: 96px;
+            flex: 0 0 130px;
+            height: 130px;
             overflow-y: auto;
             padding: 8px 12px;
             display: flex;
@@ -372,7 +372,7 @@
     width: 90%;
     border: 1px solid #2a2a2a;
     color: #e8edf2;
-    font-family: -apple-system, BlinkMacSystemFont,'Segoe UI', Roboto, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont,'Segoe UI Emoji', 'Segoe UI', Roboto, sans-serif;
 }
 .modal-box h3 {
     color: #e8edf2;
@@ -871,7 +871,7 @@
             </div>
             <div class="row">
                 <span class="row-label">Speed</span>
-                <input type="number" id="speedValue" value="250" min="50" max="700" step="25"
+                <input type="number" id="speedValue" value="250" min="50" max="999" step="25"
                        style="width:56px;padding:3px 6px;background:#333333;border:none;
                               color:#e8edf2;font-size:12px;text-align:center;font-family:inherit;">
                 <span class="menu-label-display">WPM</span>
@@ -1048,12 +1048,14 @@
             state.fontSize = Math.min(state.fontSize + 2, 60);
             __applyFontSizeLocal();
             __syncSizeLabel();
+            try { sessionStorage.setItem('st_font', String(state.fontSize)); } catch (e) {}
             saveState();
         }
         function fontDecrease() {
             state.fontSize = Math.max(state.fontSize - 2, 10);
             __applyFontSizeLocal();
             __syncSizeLabel();
+            try { sessionStorage.setItem('st_font', String(state.fontSize)); } catch (e) {}
             saveState();
         }
         function __syncSizeLabel() {
@@ -1308,7 +1310,7 @@
             var speedValue = document.getElementById('speedValue');
             var speedWidget = makeSpeedInput({
                 input: speedValue,
-                min: 50, max: 700, step: 25,
+                min: 50, max: 999, step: 25,
                 get: function () { return state.wpm; },
                 set: function (n) { state.wpm = n; saveState(); }
             });
@@ -1325,7 +1327,18 @@
             if (gear && panel) {
                 gear.onclick = function (e) {
                     e.stopPropagation();
+                    var opening = !panel.classList.contains('open');
                     panel.classList.toggle('open');
+                    if (opening) {
+                        // Place the panel so its bottom-right corner sits
+                        // just above the gear's top-right corner.
+                        var r = gear.getBoundingClientRect();
+                        panel.style.position = 'fixed';
+                        panel.style.right = (window.innerWidth - r.right) + 'px';
+                        panel.style.bottom = (window.innerHeight - r.top + 6) + 'px';
+                        panel.style.left = 'auto';
+                        panel.style.top = 'auto';
+                    }
                 };
                 // click anywhere outside the panel closes it
                 document.addEventListener('click', function (e) {
@@ -2245,12 +2258,18 @@
             }).catch(function () {});
         })();
 
-        // Restore find bar open state.
+        // Find bar does not persist across reload: it opens on click,
+        // not on page load. (The save side still writes st_fd_open.)
+        try { sessionStorage.setItem('st_fd_open', '0'); } catch (e) {}
+
+        // Restore font size.
         (function () {
             try {
-                if (sessionStorage.getItem('st_fd_open') === '1') {
-                    var fb = document.getElementById('findBar');
-                    if (fb) fb.classList.add('open');
+                var f = parseInt(sessionStorage.getItem('st_font'), 10);
+                if (isFinite(f) && f >= 10 && f <= 60) {
+                    state.fontSize = f;
+                    __applyFontSizeLocal();
+                    __syncSizeLabel();
                 }
             } catch (e) {}
         })();

@@ -1,105 +1,68 @@
 # text player
 
-*something will not work
+do you already
 
-## overview
+- rehearse situations in self-messages
+- keep notes in chats
+- watch videos but not texts
+- write notes in chat style
 
-main sim-s now
+then here is a copy of a hat you kept touching at the shop.
 
-- subtitles
-- telegram
-- discord
+main sims now: subtitles, telegram, discord.
 
-why
+- chat to yourself - two or multiple personas
+- read texts as subtitles
+- read texts like someone messages you
 
-some usage cases
-
-- you already read transcripts instead of watching a video
-- your reading notes are already especially frequent or informal like it's a live chat or even direct messages
-- you already fall into rehearsing social situations in self-messages
-- you already keep hidden blogs like personal notes
-- you already expect those platforms to fill your time while struggling with reading through long or planned items
-
-if any of these lands, you might want to look at this copy of a hat you could not stop touching at the shop.
-
-demo (partial func-ty):
+partial demo:
 
 https://bunetj.github.io/text-player/
 
-## how content is managed
+## local
 
-**local**: works offline, opens in the browser; writes json, md.
+works offline etc. writes json, md, also exports to clipboard. made for local use.
 
-export:
+## usage
 
-- chats (ds, tg): clipboard; json
-- tg channels: md
+install in c:\portable apps eg
 
-made for local use: you keep heavy texts, convert hoarder's readings.
+## import
 
-## usage cases with importing
+here are some cases.
 
-you can just paste too.
+### from text
 
-### import from txt to ui
+web pages: scrape into .txt first.
 
-#1 have the files
-
-have a folder/s with txt files or specific txt file/s.
-
-web pages: convert to txt, eg copypaste or scrape with some script or addon to many .txt files
-
-videos: download transcripts, eg https://savesubs.com
-
-#2 add to the root
-
-for one file:
+transcripts: https://savesubs.com
 
 ```
-py readings.py add [file's path]
+py readings.py add folder --recursive
+py readings.py add text.txt
 ```
 
-for folders:
-
-```
-py readings.py add [folder/s' path] --recursive
-```
-
-adds files to readings/, the folder structure mirrored
-
-#3 import to some app
+this converts to text / places into readings/ folder.
 
 ```
 py readings.py import --app tg --chat "pdf low punct rem"
 ```
 
-creates mirrored chat folders in the tg sim
+this imports to an app and formats in chat style as you prefer.
 
-apps:
+### format to chat
 
-```
---app [tg|st|ds]
-```
-
-### just convert to chat style
-
-if you don't want to use the user interfaces, you can just fragmentize a long text:
+you can go without apps:
 
 ```
-format.py [file/ folder/s path] --chat "pdf low punct rem" --sep newline
+py format.py file/folder --chat "pdf low punct rem" --sep newline
 ```
 
-this script is standalone. works with folders too. creates a copy that ends with _chat. eg, you can open the formatted text in a narrow notepad window, white on black, consolas monospace.
+this script is isolated. creates a name_chat file/folder.
 
-another experimental use is splitting the book by markers, you marker parts of text with the `<<<marker>>>` by manually walking through a .txt file and get chapters as separate text files.
+also splits a text into files with an index by manual markers.
 
-```
-format.py split [txt/folder/s path]
-```
-
-### chat style formatters
-
-the operators for the --chat flag
+### --chat style operators
 
 ```
 punct     split on punctuation, keep punctuation

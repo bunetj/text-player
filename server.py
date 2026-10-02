@@ -1,7 +1,7 @@
 # code/server.py
 # __TGC_MERGE__
 # Static file server + local-file persistence for tg / ds.
-# Serves code/ as root. Handles /data/<app>/<path> for GET/POST/DELETE.
+# Serves code/ as root. User data lives under code/data/<app>/.
 # Port 8731.
 
 import os
@@ -23,13 +23,12 @@ import base64 as _b64
 import shutil as _shutil
 import urllib.parse as _up
 import urllib.request as _urlreq
-import urllib.request as _urlreq
 
 _TG_ROOT   = Path(ROOT)
 _TG_DIR    = _TG_ROOT / "telegram"
-_TG_DATA   = _TG_DIR / "data"
-_TG_MEDIA  = _TG_DIR / "media" / "avatars"
-_TG_ROOTS  = _TG_DIR / "allowed_roots.txt"
+_TG_DATA   = _TG_ROOT / "data" / "telegram"
+_TG_MEDIA  = _TG_ROOT / "data" / "telegram" / "media" / "avatars"
+_TG_ROOTS  = _TG_ROOT / "data" / "telegram" / "allowed_roots.txt"
 
 def _tg_allowed_roots():
     roots = []
@@ -92,7 +91,7 @@ class Handler(SimpleHTTPRequestHandler):
         rel = "/".join(parts[2:])
         if not rel or ".." in rel.split("/"):
             return None
-        data_dir = os.path.join(ROOT, app, "data")
+        data_dir = os.path.join(ROOT, "data", app)
         os.makedirs(data_dir, exist_ok=True)
         return _safe_join(data_dir, *rel.split("/"))
 
@@ -100,9 +99,6 @@ class Handler(SimpleHTTPRequestHandler):
         if self.path == "/data/ping":
             self._send_json(200, {"ok": True})
             return
-        # /fetch?url=... — plain-text fetch for URL import (subtitles).
-        if self.path.startswith("/fetch"):
-            return self._handle_fetch()
         # /fetch?url=... — plain-text fetch for URL import (subtitles).
         if self.path.startswith("/fetch"):
             return self._handle_fetch()
@@ -190,30 +186,6 @@ class Handler(SimpleHTTPRequestHandler):
         self.send_header("Cache-Control", "no-store")
         self.end_headers()
         self.wfile.write(body)
-
-    def _handle_fetch(self):
-        import urllib.parse as _up2
-        parsed = _up2.urlparse(self.path)
-        qs = _up2.parse_qs(parsed.query or "")
-        raw = (qs.get("url") or [""])[0]
-        if not raw:
-            return self._send_json(400, {"ok": False, "error": "missing url"})
-        u = _up2.urlparse(raw)
-        if u.scheme not in ("http", "https"):
-            return self._send_json(400, {"ok": False, "error": "bad scheme"})
-        try:
-            req = _urlreq.Request(raw, headers={"User-Agent": "Mozilla/5.0"})
-            with _urlreq.urlopen(req, timeout=15) as r:
-                ct = r.headers.get("Content-Type", "") or ""
-                data = r.read()
-            body = data.decode("utf-8", errors="replace")
-            return self._send_json(200, {
-                "ok": True,
-                "contentType": ct,
-                "body": body,
-            })
-        except Exception as e:
-            return self._send_json(200, {"ok": False, "error": str(e)})
 
     def _handle_fetch(self):
         import urllib.parse as _up2
@@ -345,7 +317,7 @@ class Handler(SimpleHTTPRequestHandler):
         try: out.write_bytes(img)
         except Exception as e:
             return self._tg_send_json(500, {"error": f"write: {e}"})
-        rel = f"telegram/media/avatars/{cid}.jpg"
+        rel = f"data/telegram/media/avatars/{cid}.jpg"
         return self._tg_send_json(200, {"path": "/" + rel})
 
     def _tg_handle_delete_avatar(self):
@@ -433,18 +405,69 @@ class Handler(SimpleHTTPRequestHandler):
                     except Exception: pass
         return self._tg_send_json(200, {"ok": True, "chats": n_chats, "posts": n_posts})
 
+def _pick_port(start=8731, end=8799):
+    import socket
+    for p in range(start, end + 1):
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        try:
+            s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            s.bind(("127.0.0.1", p))
+            s.close()
+            return p
+        except OSError:
+            s.close()
+    raise SystemExit("no free port in %d..%d" % (start, end))
+
+
 def main():
-    port = 8731
+    import signal, threading, webbrowser
+    argv = sys.argv[1:]
+    no_browser = "--no-browser" in argv
+    port_arg = None
+    for i, a in enumerate(argv):
+        if a == "--port" and i + 1 < len(argv):
+            try: port_arg = int(argv[i + 1])
+            except ValueError: pass
+    port = port_arg if port_arg else _pick_port()
+
     os.chdir(ROOT)
-    httpd = ThreadingHTTPServer(("0.0.0.0", port), Handler)
+    httpd = ThreadingHTTPServer(("127.0.0.1", port), Handler)
+    _port_file = Path(ROOT) / "data" / ".port"
+    try:
+        _port_file.parent.mkdir(parents=True, exist_ok=True)
+        _port_file.write_text(str(port), encoding="utf-8")
+    except Exception:
+        pass
     print("Serving from: %s" % ROOT)
-    print("  App:  http://localhost:%d/telegram/index.html" % port)
-    print("  Data: http://localhost:%d/data/<app>/<path>" % port)
+    print("  App:  http://127.0.0.1:%d/telegram/index.html" % port)
+    print("  Data: http://127.0.0.1:%d/data/<app>/<path>" % port)
     print("Ctrl+C to stop.")
+
+    if not no_browser:
+        threading.Timer(
+            1.0,
+            lambda: webbrowser.open("http://127.0.0.1:%d/telegram/index.html" % port),
+        ).start()
+
+    def _stop(signum=None, frame=None):
+        print("\nshutting down...")
+        threading.Thread(target=httpd.shutdown, daemon=True).start()
+
+    try:
+        signal.signal(signal.SIGINT,  _stop)
+        signal.signal(signal.SIGTERM, _stop)
+    except Exception:
+        pass
+
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:
         pass
+    finally:
+        try: httpd.server_close()
+        except Exception: pass
+        try: _port_file.unlink()
+        except Exception: pass
 
 if __name__ == "__main__":
     main()
