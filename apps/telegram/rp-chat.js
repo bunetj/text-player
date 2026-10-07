@@ -93,8 +93,8 @@ window.RPChat = (function () {
                 id: id,
                 people: {
                     own: {
-                        name: 'Alex',
-                        emoji: '🙂',
+                        name: (window.__userName || 'Alex'),
+                        emoji: (window.__userEmoji || '🙂'),
                         avatarColor: '#2b5278',
                         myMsgColor: '#2b5278',
                         theirMsgColor: '#2b3b4a',
@@ -149,6 +149,26 @@ window.RPChat = (function () {
                 theirMsgColor: __DEFAULT_OTHER.theirMsgColor
             };
         }
+
+
+// ---- user name from /user ----
+function __loadUserName() {
+    return fetch('/user', {cache:'no-store'})
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (u) {
+            if (!u) return null;
+            if (typeof u.name === 'string' && u.name.trim()) {
+                window.__userName = u.name.trim();
+                state.people.own.name = window.__userName;
+            }
+            if (typeof u.emoji === 'string' && u.emoji.trim()) {
+                window.__userEmoji = u.emoji.trim();
+                state.people.own.emoji = window.__userEmoji;
+            }
+            return u;
+        })
+        .catch(function () { return null; });
+}
 
         // ---- DOM refs ----
         var msgs         = document.getElementById('msgs');
@@ -484,204 +504,47 @@ function sendBotMessage() {
             
             if (cmd === '/chat') {
                 var chatOps = args.slice();
-                var chatIndex = 0;
-
-                function finishChatOps() {
-                    state.scriptIndex = 0;
-                    saveState();
-                    __ph('chat applied');
-                }
-
-                function runNextChatOp() {
-                    if (chatIndex >= chatOps.length) {
-                        finishChatOps();
-                        return;
-                    }
-
-                    var op = (chatOps[chatIndex] || '').toLowerCase();
-
-                    // ------------------------------------------------
-                    // /chat low
-                    // ------------------------------------------------
-                    if (op === 'low') {
-                        state.script = toLower(state.script || '');
-                        chatIndex++;
-                        runNextChatOp();
-                        return;
-                    }
-
-                    // ------------------------------------------------
-                    // /chat rem
-                    // Remove punctuation only.
-                    // ------------------------------------------------
-                    if (op === 'rem') {
-                        var remBlocks = __blocks(state.script || '');
-                        var remOut = [];
-                        for (var ri = 0; ri < remBlocks.length; ri++) {
-                            var remBuf = removePunctuation(remBlocks[ri]).trim();
-                            if (remBuf) remOut.push(remBuf);
-                        }
-                        state.script = __join(remOut);
-                        chatIndex++;
-                        runNextChatOp();
-                        return;
-                    }
-
-                    // ------------------------------------------------
-                    // /chat newline
-                    // ------------------------------------------------
-                    if (op === 'lines') {
-                        var lineBlocks = __blocks(state.script || '');
-                        var lineOut = [];
-                        for (var li2 = 0; li2 < lineBlocks.length; li2++) {
-                            var lineParts = lineBlocks[li2]
-                                .split(/\n+/)
-                                .map(function (s) {
-                                    return s.trim();
-                                })
-                                .filter(function (s) {
-                                    return s;
-                                });
-                            for (var lj2 = 0; lj2 < lineParts.length; lj2++) {
-                                lineOut.push(lineParts[lj2]);
-                            }
-                        }
-                        state.script = __join(lineOut);
-
-                        chatIndex++;
-                        runNextChatOp();
-                        return;
-                    }
-
-                    // ------------------------------------------------
-                    // /chat oneline
-                    // ------------------------------------------------
-                    if (op === 'line') {
-                        var oneParts = __blocks(state.script || '')
-                            .map(function (s) {
-                                return s.trim();
-                            })
-                            .filter(function (s) {
-                                return s;
-                            });
-
-                        state.script = oneParts.join(' ');
-
-                        chatIndex++;
-                        runNextChatOp();
-                        return;
-                    }
-
-                    // ------------------------------------------------
-                    // /chat sent
-                    // ------------------------------------------------
-                    if (op === 'sent') {
-                        if (typeof splitSentences !== 'function') {
-                            __ph('chat sent: unavailable');
-                            return;
-                        }
-
-                        var sentOut = [];
-                        var sentBlocks = __blocks(state.script || '');
-
-                        for (var si = 0; si < sentBlocks.length; si++) {
-                            var sentParts = splitSentences(sentBlocks[si]);
-
-                            for (var sk = 0; sk < sentParts.length; sk++) {
-                                if (sentParts[sk] && sentParts[sk].trim()) {
-                                    sentOut.push(sentParts[sk].trim());
-                                }
-                            }
-                        }
-
-                        state.script = __join(sentOut);
-
-                        chatIndex++;
-                        runNextChatOp();
-                        return;
-                    }
-
-                    // ------------------------------------------------
-                    // /chat chunks N
-                    // ------------------------------------------------
-                    if (op === 'chunk') {
-                        var chunkN = parseInt(chatOps[chatIndex + 1], 10) || 3;
-
-                        var chunkOut = [];
-                        var chunkBlocks = __blocks(state.script || '');
-
-                        for (var ci = 0; ci < chunkBlocks.length; ci++) {
-                            var words = chunkBlocks[ci]
-                                .split(/\s+/)
-                                .filter(function (w) {
-                                    return w;
-                                });
-
-                            for (var ck = 0; ck < words.length; ck += chunkN) {
-                                chunkOut.push(
-                                    words.slice(ck, ck + chunkN).join(' ')
-                                );
-                            }
-                        }
-
-                        state.script = __join(chunkOut);
-
-                        chatIndex += 2;
-                        runNextChatOp();
-                        return;
-                    }
-
-                    // ------------------------------------------------
-                    // /chat pdf
-                    // Whole-script transform: no block splitting.
-                    // ------------------------------------------------
-                    if (op === 'pdf') {
-                        if (typeof formatAsPdf !== 'function') {
-                            __ph('chat pdf: unavailable');
-                            return;
-                        }
-                        state.script = formatAsPdf(state.script || '');
-                        chatIndex++;
-                        runNextChatOp();
-                        return;
-                    }
-
-                    // ------------------------------------------------
-                    // /chat punct
-                    //
-                    // This is the only asynchronous operation.
-                    // Everything before it has already been applied.
-                    // When the popup closes, continue with the
-                    // remaining commands.
-                    // ------------------------------------------------
-                    if (op === 'punct') {
-                        var punctOut = [];
-                        var punctBlocks = __blocks(state.script || '');
-
-                        for (var pbi = 0; pbi < punctBlocks.length; pbi++) {
-                            var parts = splitPunct(punctBlocks[pbi], { strip: true });
-                            for (var pi = 0; pi < parts.length; pi++) {
-                                if (parts[pi]) punctOut.push(parts[pi]);
-                            }
-                        }
-
-                        state.script = __join(punctOut);
-
-                        chatIndex++;
-                        runNextChatOp();
-                        return;
-                    }
-
-                    // Unknown operation
-                    __ph('chat: unknown "' + op + '"');
-                }
-
                 if (!chatOps.length) {
                     __ph('chat: low | punct | rem | lines | line | sent | chunk N | pdf');
                     return true;
                 }
-
-                runNextChatOp();
+                var __applySeq = Promise.resolve();
+                var __applyIdx = 0;
+                function __applyNext() {
+                    if (__applyIdx >= chatOps.length) return Promise.resolve();
+                    var op = (chatOps[__applyIdx] || '').toLowerCase();
+                    var consume = 1;
+                    var callOps = [op];
+                    if (op === 'chunk') {
+                        callOps = ['chunk', String(parseInt(chatOps[__applyIdx+1], 10) || 3)];
+                        consume = 2;
+                    }
+                    __applyIdx += consume;
+                    return fetch('/ops/apply', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            text: state.script || '',
+                            ops: callOps,
+                            sep: '\n---\n'
+                        })
+                    }).then(function (r) {
+                        if (!r.ok) throw new Error('ops/apply ' + r.status);
+                        return r.json();
+                    }).then(function (j) {
+                        if (j && typeof j.text === 'string') state.script = j.text;
+                        return __applyNext();
+                    });
+                }
+                __applySeq = __applyNext()
+                    .then(function () {
+                        state.scriptIndex = 0;
+                        saveState();
+                        __ph('chat applied');
+                    })
+                    .catch(function (e) {
+                        __ph('chat failed: ' + e);
+                    });
                 return true;
             }
 
@@ -2086,7 +1949,7 @@ if (d.currentPerspective === 'own' || d.currentPerspective === 'other') {
 
         function boot() {
             var __id = __hashId();
-            syncFeedFromDisk(function () {
+            __loadUserName().then(function () { syncFeedFromDisk(function () {
                 if (!__id) {
                     seedFeedFromStorage();
                     // TGC owns the empty-hash view. Do not paint RP's feed.
@@ -2095,7 +1958,7 @@ if (d.currentPerspective === 'own' || d.currentPerspective === 'other') {
                 // c/ and f/ hashes belong to the merged router.
                 if (__id.indexOf('c/') === 0 || __id.indexOf('f/') === 0) return;
                 openChat(__id);
-            });
+            }); });
         }
 
         if (document.readyState === 'loading') {

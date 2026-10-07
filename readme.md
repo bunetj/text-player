@@ -1,80 +1,63 @@
 # text player
 
-i already do
+here i vibecoded a copy of a hat 🪞 that i kept touching at the shop, by which i mean messaging myself and reading chats, watching subtitles better than reading texts.
 
-- rehearse situations in self-messages
-- keep notes in chats
-- watch videos but not texts
-- write notes in chat style
+**text player** displays texts like it's messanger or subtitles. you can use its chat style converter separately. all runs locally. the link is a demo that i don't support: https://bunetj.github.io/text-player/
 
-so here is a copy of a hat i kept touching at the shop.
+_text player is made also to read easier, which works on the surface._ with it, i follow the thought for longer, but i still need to know enough about the text myself.
 
-main sims now: subtitles, telegram, discord.
+## usage
 
-- chat to yourself - two or multiple personas
-- read texts as subtitles
-- read texts like someone messages you
+download and run server
 
-partial demo:
+## components
 
-https://bunetj.github.io/text-player/
+▶ text player simulators
 
-## local
+💬 chatify converter
 
-works offline etc. writes json, md, also exports to clipboard. made for local use.
+📁 texts library
 
-## install
+## text player
 
-download in c:\portable apps eg
+simulators: telegram, subtitles, discord, led scroller.
 
-## import
+usages:
 
-here are some cases.
+- **read** like it's messanger or subtitles etc
+- **write** in the chat or create posts and keep this as notes by exporting to clipboard or using json files
+- **roleplay** like two or many personas
 
-### from text
+## chatify
 
-web pages: scrape into .txt first.
-
-transcripts: https://savesubs.com
+chatify is an independent cli tool that converts plain text to chat stlye as shown in the help message:
 
 ```
-py readings.py add folder --recursive
-py readings.py add text.txt
+usage: python chatify/cli.py <path> --chat "pdf low punct rem" [--sep blank|newline|none]
+
+ops
+  pdf       reassemble PDF-wrapped lines
+  low       lowercase
+  punct     split on punctuation
+  rem       remove punctuation
+  lines     split on newlines
+  line      collapse to one line
+  sent      split on sentence endings
+  chunk N   split into blocks of N words
+  short     shorthand (en, ru)
+
+sep
+  none      whole file is one block (default)
+  blank     \n\n
+  newline   \n
 ```
 
-this converts to text / places into readings/ folder.
+eg "pdf low punct rem": change a torn pdf copypaste to a whole one in lowercase with no punct.
 
-```
-py readings.py import --app tg --chat "pdf low punct rem"
-```
+shorthand converters are bref for EN (https://github.com/i0Z3R0/Bref-Shorthand-Converter) and skrpcht for RU (bunetj). bref is a large dictionary with plain text and skrpcht a little dic with plain text and regex plus some automatic rules.
 
-this imports to an app and formats in chat style as you prefer.
+## import texts
 
-### format to chat style
+readings.py: convert to .txt, add to readings/ folder, optionally create converted copies near to read outside of sims
 
-you can go without apps:
-
-```
-py format.py file/folder --chat "pdf low punct rem" --sep newline
-```
-
-this script is isolated. creates a name_chat file/folder.
-
-also splits a text into files with an index by manual markers.
-
-### --chat style operators
-
-```
-punct     split on punctuation, keep punctuation
-rem       remove punctuation only
-low       lowercase the script
-lines     split on newlines
-line      collapse into one message
-sent      split on periods
-chunk N   split into messages of N words each
-pdf       unwrap PDF-paste line breaks
-```
-
-## ai note
-
-vibecoded as a hobby.
+import.py: import into an app, optionally pre-converted to chat style.

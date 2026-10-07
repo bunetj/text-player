@@ -134,8 +134,8 @@
         }
 
     </style>
-    <link rel="stylesheet" href="../shared/telegram.css">
-    <link rel="stylesheet" href="../shared/modal.css">
+    <link rel="stylesheet" href="../../shared/telegram.css">
+    <link rel="stylesheet" href="../../shared/modal.css">
 <style>
 /* ===== __TGC_MERGE__ styles: sidebar, unified feed, channel view, modals ===== */
 #sidebar {
@@ -183,7 +183,9 @@
 
 #feedViewUnified { display: none; flex-direction: column; width: 100%; height: 100%; flex: 1 1 auto; min-width: 0; }
 #feedViewUnified.open { display: flex; }
-#feedViewUnified .header { background: #17212b; }
+#feedViewUnified .header { background: #17212b; display: flex; align-items: center; padding: 8px 14px; min-height: 52px; box-sizing: border-box; }
+#feedViewUnified .header .chat-name { font-size: 15px; font-weight: 600; color: #fff; }
+
 .feed-row {
   display: flex; align-items: center; gap: 12px;
   padding: 10px 14px; cursor: pointer; min-height: 64px;
@@ -592,16 +594,16 @@ body.inner-view #sidebar { display: none !important; }
             </div>
         </div>
     </div>
-<script src="../shared/bubble.js"></script>
-<script src="../shared/markdown.js"></script>
-<script src="../shared/clipboard.js"></script>
-<script src="../shared/modal.js"></script>
-<script src="../shared/font.js"></script>
-<script src="../shared/chat-core.js"></script>
-<script src="../shared/store.js"></script>
-<script src="../shared/persist.js"></script>
-<script src="../shared/text.js"></script>
-<script src="../shared/prep.js"></script>
+<script src="../../shared/bubble.js"></script>
+<script src="../../shared/markdown.js"></script>
+<script src="../../shared/clipboard.js"></script>
+<script src="../../shared/modal.js"></script>
+<script src="../../shared/font.js"></script>
+<script src="../../shared/chat-core.js"></script>
+<script src="../../shared/store.js"></script>
+<script src="../../shared/persist.js"></script>
+<script src="../../shared/text.js"></script>
+
 <script src="rp-chat.js"></script>
 
 

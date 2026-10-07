@@ -1432,12 +1432,12 @@
         </div>
     </div>
     
-    <script src="../shared/markdown.js"></script>
-    <script src="../shared/clipboard.js"></script>
-    <script src="../shared/store.js"></script>
-<script src="../shared/persist.js"></script>
-    <script src="../shared/text.js"></script>
-<script src="../shared/speed.js"></script>
+    <script src="../../shared/markdown.js"></script>
+    <script src="../../shared/clipboard.js"></script>
+    <script src="../../shared/store.js"></script>
+<script src="../../shared/persist.js"></script>
+    <script src="../../shared/text.js"></script>
+<script src="../../shared/speed.js"></script>
     <script>
         // ============================================
         // JAVASCRIPT - Complete App Logic
@@ -1546,6 +1546,11 @@
     
                 // ----- Initialize -----
         function initializeChats() {
+            if (!window.__dsUserLoaded) {
+                window.__dsUserLoaded = true;
+                dsLoadUser().then(function () { initializeChats(); });
+                return;
+            }
             // Disk-first: pull feed.json, then read chats from it.
             var __host = location.hostname;
             var __isLocal = (__host === 'localhost' || __host === '127.0.0.1'
@@ -1589,7 +1594,36 @@
             loadCurrentChat();
         }
         
-        // ----- Chat List -----
+    
+// ---- /user ----
+function dsApplyUserToPersonas(list) {
+    if (!Array.isArray(list)) return;
+    var n = window.__userName;
+    var e = window.__userEmoji;
+    if (!n && !e) return;
+    for (var i = 0; i < list.length; i++) {
+        if (list[i] && list[i].id === 'persona1') {
+            if (n) list[i].name = n;
+            list[i].symbol = e || ((n || 'Y')[0] || 'Y').toUpperCase();
+            break;
+        }
+    }
+}
+function dsLoadUser() {
+    return fetch('/user', {cache:'no-store'})
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (u) {
+            if (u && typeof u.name === 'string' && u.name.trim()) {
+                window.__userName = u.name.trim();
+            }
+            if (u && typeof u.emoji === 'string' && u.emoji.trim()) {
+                window.__userEmoji = u.emoji.trim();
+            }
+        })
+        .catch(function () {});
+}
+
+    // ----- Chat List -----
         function renderChatsList() {
             const chats = JSON.parse(localStorage.getItem("mirrorChats") || "[]");
             pSave('discord', 'mirrorChats', 'feed.json', chats);
@@ -1660,7 +1694,7 @@
             const chats = JSON.parse(localStorage.getItem("mirrorChats") || "[]");
             const currentChat = chats.find((chat) => chat.id === chatId);
             if (currentChat) {
-                currentChatName.textContent = currentChat.name;
+                if (currentChatName && currentChat) currentChatName.textContent = currentChat.name;
                 updateChannelTopic();
             }
             
@@ -1779,10 +1813,13 @@
     if (savedPersonas) {
         personas = JSON.parse(savedPersonas);
         migratePersonas(personas);
+        dsApplyUserToPersonas(personas);
     } else {
+        var __un = window.__userName || "You";
+        var __ue = window.__userEmoji || (__un[0] || "Y").toUpperCase();
         personas = [
             { id: "bot", name: "Bot", color: "#ff6b6b", symbol: "🤖", type: "bot", responses: botResponses.slice() },
-            { id: "persona1", name: "You", color: "#5865f2", symbol: "Y", type: "ordinary" },
+            { id: "persona1", name: __un, color: "#5865f2", symbol: __ue, type: "ordinary" },
             { id: "persona2", name: "Other", color: "#23a55a", symbol: "O", type: "ordinary" },
         ];
         savePersonas();
@@ -2492,7 +2529,7 @@
                     chats[chatIndex].name = newName;
                     localStorage.setItem("mirrorChats", JSON.stringify(chats));
                     renderChatsList();
-                    currentChatName.textContent = newName;
+                    if (currentChatName) currentChatName.textContent = newName;
                 }
             }
             chatNameModal.style.display = "none";
@@ -2686,48 +2723,19 @@ function updateSpeakerBlockCount() {
 
 function applySpeakerPrep(mode) {
     var el = document.getElementById("speakerScriptText");
-    var raw = el.value;
-    var blocks = splitByBlankLines(raw);
-
-    if (mode === "low") {
-        var lowered = blocks.map(function (b) { return toLower(b); });
-        raw = lowered.join("\n\n");
-    } else if (mode === "punct") {
-        var out = [];
-        for (var i = 0; i < blocks.length; i++) {
-            var parts = splitPunct(blocks[i], { strip: true });
-            for (var j = 0; j < parts.length; j++) {
-                if (parts[j]) out.push(parts[j]);
-            }
-        }
-        raw = out.join("\n\n");
-    } else if (mode === "sent") {
-        var out2 = [];
-        for (var k = 0; k < blocks.length; k++) {
-            var parts2 = splitSentences(blocks[k]);
-            for (var m = 0; m < parts2.length; m++) {
-                if (parts2[m] && parts2[m].trim()) out2.push(parts2[m].trim());
-            }
-        }
-        raw = out2.join("\n\n");
-    } else if (mode === "chunk") {
+    var ops;
+    if (mode === "chunk") {
         var n = parseInt(document.getElementById("spkChunkN").value) || 3;
-        var out3 = [];
-        for (var p = 0; p < blocks.length; p++) {
-            var chunks = splitWords(blocks[p], n);
-            for (var q = 0; q < chunks.length; q++) {
-                if (chunks[q].trim()) out3.push(chunks[q]);
-            }
-        }
-        raw = out3.join("\n\n");
-    } else if (mode === "pdf") {
-        if (typeof formatAsPdf === 'function') {
-            raw = formatAsPdf(raw);
-        }
+        ops = ["chunk", String(n)];
+    } else {
+        ops = [mode];
     }
-
-    el.value = raw;
-    updateSpeakerBlockCount();
+    applyOpsRemote(el.value, ops, "\n\n").then(function (txt) {
+        el.value = txt;
+        updateSpeakerBlockCount();
+    }).catch(function (e) {
+        console.error(e);
+    });
 }
 
 let speakerTimers = {};
@@ -2891,5 +2899,7 @@ function updatePersonaTypeVisibility() {
     }
 }
 </script>
+
+
 </body>
 </html>

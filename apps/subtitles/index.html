@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/png" href="favicon.png">
-    <link rel="stylesheet" href="../shared/modal.css">
+    <link rel="stylesheet" href="../../shared/modal.css">
     <title>subtitles simulator</title>
     <style>
         * {
@@ -881,14 +881,14 @@
 
 
 
-<script src="../shared/persist.js"></script>
-<script src="../shared/modal.js"></script>
-<script src="../shared/ui.js"></script>
-<script src="../shared/text.js"></script>
-<script src="../shared/font.js"></script>
-<script src="../shared/prep.js"></script>
-<script src="../shared/store.js"></script>
-<script src="../shared/speed.js"></script>
+<script src="../../shared/persist.js"></script>
+<script src="../../shared/modal.js"></script>
+<script src="../../shared/ui.js"></script>
+<script src="../../shared/text.js"></script>
+<script src="../../shared/font.js"></script>
+
+<script src="../../shared/store.js"></script>
+<script src="../../shared/speed.js"></script>
     <script>
         // ============================================================
         // SUBTITLE MFV - Minimal Functional Version
@@ -1203,7 +1203,10 @@
                 '   <span class="menu-label">PREP</span>' +
                 '   <button class="menu-btn" id="lowBtn">low</button>' +
                 '   <button class="menu-btn" id="punctBtn">punct</button>' +
-                '   <button class="menu-btn" id="sentBtn">sentences</button>' +
+                '   <button class="menu-btn" id="remBtn">rem</button>' +
+                '   <button class="menu-btn" id="sentBtn">sent</button>' +
+                '   <button class="menu-btn" id="linesBtn">lines</button>' +
+                '   <button class="menu-btn" id="lineBtn">line</button>' +
                 '   <button class="menu-btn" id="pdfBtn">pdf</button>' +
                 '</div>' +
                 '<div class="menu-section">' +
@@ -1230,81 +1233,28 @@
                 // Font change does NOT stop autoplay
                 fontIncrease();
             };
-            document.getElementById('lowBtn').onclick = function () {
+            function __runOp(op, args) {
                 stopPlayOnControl();
-                showLowPopup(input, '\n\n');
-                // after apply, refresh blocks and display
-                var poll = setInterval(function () {
-                    if (!document.getElementById('__lowPopup')) {
-                        clearInterval(poll);
-                        state.blocks = splitBlocks(input.value);
-                        state.hasContent = state.blocks.length > 0;
-                        state.idx = 0;
-                        render();
-                    }
-                }, 50);
-            };
-            document.getElementById('punctBtn').onclick = function () {
-                stopPlayOnControl();
-                showPunctPopup(input, '\n\n', splitBlocks);
-                var poll = setInterval(function () {
-                    if (!document.getElementById('__punctPopup')) {
-                        clearInterval(poll);
-                        state.blocks = splitBlocks(input.value);
-                        state.hasContent = state.blocks.length > 0;
-                        state.idx = 0;
-                        render();
-                    }
-                }, 50);
-            };
-            document.getElementById('sentBtn').onclick = function () {
-                stopPlayOnControl();
-                var raw = input.value;
-                var blocks = [];
-                var baseBlocks = splitBlocks(raw);
-                for (var b = 0; b < baseBlocks.length; b++) {
-                    var parts = splitSentences(baseBlocks[b]);
-                    for (var i = 0; i < parts.length; i++) { blocks.push(parts[i]); }
-                }
-                if (blocks.length) {
-                    var mapped = [];
-                    for (var i = 0; i < blocks.length; i++) {
-                        mapped.push(blocks[i].trim());
-                    }
-                    input.value = mapped.join('\n\n');
-                    state.blocks = mapped;
-                    state.hasContent = true;
+                var ops = args ? [op].concat(args) : [op];
+                applyOpsRemote(input.value, ops, '\n\n').then(function (txt) {
+                    input.value = txt;
+                    state.blocks = splitBlocks(txt);
+                    state.hasContent = state.blocks.length > 0;
                     state.idx = 0;
                     render();
-                }
-            };
-            document.getElementById('pdfBtn').onclick = function () {
-                stopPlayOnControl();
-                if (typeof formatAsPdf !== 'function') return;
-                input.value = formatAsPdf(input.value);
-                state.blocks = splitBlocks(input.value);
-                state.hasContent = state.blocks.length > 0;
-                state.idx = 0;
-                render();
-                saveState();
-            };
+                }).catch(function (e) { console.error(e); });
+            }
+            document.getElementById('lowBtn').onclick   = function () { __runOp('low'); };
+            document.getElementById('punctBtn').onclick = function () { __runOp('punct'); };
+            document.getElementById('remBtn').onclick   = function () { __runOp('rem'); };
+            document.getElementById('sentBtn').onclick  = function () { __runOp('sent'); };
+            document.getElementById('linesBtn').onclick = function () { __runOp('lines'); };
+            document.getElementById('lineBtn').onclick  = function () { __runOp('line'); };
+            document.getElementById('pdfBtn').onclick   = function () { __runOp('pdf'); };
             document.getElementById('applyBtn').onclick = function () {
                 stopPlayOnControl();
-                // chunk each block from splitBlocks, join with \n\n
                 var n = parseInt(document.getElementById('wordCountInput').value) || 3;
-                var base = splitBlocks(input.value);
-                var out = [];
-                for (var b = 0; b < base.length; b++) {
-                    var chunks = splitWords(base[b], n);
-                    for (var i = 0; i < chunks.length; i++) {
-                        if (chunks[i].trim()) out.push(chunks[i]);
-                    }
-                }
-                if (out.length) input.value = out.join('\n\n');
-                state.blocks = splitBlocks(input.value);
-                state.hasContent = state.blocks.length > 0;
-                state.idx = 0;
-                render();
+                __runOp('chunk', [String(n)]);
             };
 
             var speedValue = document.getElementById('speedValue');
@@ -2308,7 +2258,37 @@
 
 
 </script>
-        <script src="../shared/bridge.js"></script>
+        <script src="../../shared/bridge.js"></script>
+
+<script>
+(function(){
+  function apply(u){
+    if (!u || typeof u.name !== 'string' || !u.name.trim()) return;
+    var n = u.name.trim();
+    try {
+      if (typeof chat !== 'undefined' && chat) chat.name = n;
+      var nm = document.getElementById('chatName');
+      if (nm) nm.value = n;
+    } catch(e) {}
+  }
+  function load(){
+    fetch('/user', {cache:'no-store'}).then(function(r){return r.ok?r.json():null;}).then(function(u){
+      window.__userName = u && u.name ? u.name : 'Alex';
+      apply(u);
+      // reapply whenever the name input is re-rendered with the old value
+      setInterval(function(){
+        var nm = document.getElementById('chatName');
+        if (!nm) return;
+        if (nm.value && nm.value.trim() !== window.__userName) {
+          apply({name: window.__userName});
+        }
+      }, 500);
+    }).catch(function(){});
+  }
+  window.stLoadUserName = load;
+  load();
+})();
+</script>
 </body>
 
 </html>

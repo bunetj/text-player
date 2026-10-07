@@ -50,13 +50,41 @@ h1:last-child { margin-bottom: 0; }
 </head>
 <body>
 <div class="hub twemoji">
+<div id="hubUser" style="position:fixed;top:10px;left:12px;font-size:13px;color:#8e9aa5;font-family:inherit;">
+  Name: <input id="hubName" type="text" value="Alex" style="background:transparent;border:none;border-bottom:1px solid #2a2a2a;color:#e8edf2;font:inherit;width:80px;outline:none;">
+  Emoji: <input id="hubEmoji" type="text" value="\U0001F642" maxlength="4" style="background:transparent;border:none;border-bottom:1px solid #2a2a2a;color:#e8edf2;font:inherit;width:32px;text-align:center;outline:none;">
+</div>
+<script>
+(function(){
+  var n = document.getElementById('hubName');
+  var e = document.getElementById('hubEmoji');
+  function load(){
+    fetch('/user', {cache:'no-store'}).then(function(r){return r.ok?r.json():null;}).then(function(u){
+      if (!u) return;
+      if (typeof u.name === 'string') n.value = u.name;
+      if (typeof u.emoji === 'string') e.value = u.emoji;
+    }).catch(function(){});
+  }
+  function save(){
+    fetch('/user', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({name: n.value, emoji: e.value})
+    }).catch(function(){});
+  }
+  n.addEventListener('input', save);
+  e.addEventListener('input', save);
+  load();
+})();
+</script>
+
 
 <h1>text player</h1>
 
-<a class="pad" href="telegram/index.html"><span class="pad-emoji">💬</span>telegram<span class="pad-emoji">⭐</span></a>
-<a class="pad" href="subtitles/index.html"><span class="pad-emoji">🎞</span>subtitles<span class="pad-emoji">🙉</span></a>
-<a class="pad" href="discord/index.html"><span class="pad-emoji">👾</span>discord<span class="pad-emoji">👥👥👥</span></a>
-<a class="pad" href="led/index.html"><span class="pad-emoji">💡</span>led scroller<span class="pad-emoji">🕶</span></a>
+<a class="pad" href="apps/telegram/index.html"><span class="pad-emoji">💬</span>telegram<span class="pad-emoji">⭐</span></a>
+<a class="pad" href="apps/subtitles/index.html"><span class="pad-emoji">🎞</span>subtitles<span class="pad-emoji">🙉</span></a>
+<a class="pad" href="apps/discord/index.html"><span class="pad-emoji">👾</span>discord<span class="pad-emoji">👥👥👥</span></a>
+<a class="pad" href="apps/led/index.html"><span class="pad-emoji">💡</span>led scroller<span class="pad-emoji">🕶</span></a>
 
 <h1>text player</h1>
 

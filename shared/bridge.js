@@ -37,102 +37,21 @@
 
     app.post({ type: 'ready' });
 
-    // === ядро: применить операцию к тексту и вернуть результат ===
+    // === apply an op to text via the server ===
     function applyOp(op, args, text) {
         var inp = document.getElementById('inputText');
-        if (!inp) return text;
-        var saved = inp.value;
-        inp.value = text;
-
-        try {
-            if (op === 'punct') {
-                // повторяем логику punctBtn
-                if (typeof punctSplit === 'function' && typeof tgJoin === 'function' && typeof splitPunct === 'function') {
-                    // telegram
-                    var blocks = punctSplit(text);
-                    var out = [];
-                    for (var b = 0; b < blocks.length; b++) {
-                        var parts = splitPunct(blocks[b]);
-                        for (var i = 0; i < parts.length; i++) {
-                            if (parts[i].trim()) out.push(parts[i].trim());
-                        }
-                    }
-                    inp.value = tgJoin(out);
-                } else if (typeof splitPunct === 'function') {
-                    // led / subtitles
-                    var blocks2 = text.split(/\n\s*\n/).filter(function (s) { return s.trim(); });
-                    var out2 = [];
-                    if (blocks2.length <= 1) {
-                        var parts2 = splitPunct(text);
-                        for (var j = 0; j < parts2.length; j++) {
-                            if (parts2[j].trim()) out2.push(parts2[j].trim());
-                        }
-                    } else {
-                        for (var k = 0; k < blocks2.length; k++) {
-                            var parts3 = splitPunct(blocks2[k]);
-                            for (var m = 0; m < parts3.length; m++) {
-                                if (parts3[m].trim()) out2.push(parts3[m].trim());
-                            }
-                        }
-                    }
-                    inp.value = out2.join('\n\n');
-                }
-            } else if (op === 'sent') {
-                if (typeof tgSplit === 'function' && typeof tgJoin === 'function' && typeof splitSentences === 'function') {
-                    var blocks3 = tgSplit(text);
-                    var out3 = [];
-                    for (var b3 = 0; b3 < blocks3.length; b3++) {
-                        var parts4 = splitSentences(blocks3[b3]);
-                        for (var i3 = 0; i3 < parts4.length; i3++) {
-                            if (parts4[i3].trim()) out3.push(parts4[i3].trim());
-                        }
-                    }
-                    inp.value = tgJoin(out3);
-                } else if (typeof splitSentences === 'function') {
-                    var parts5 = splitSentences(text);
-                    var out5 = [];
-                    for (var i5 = 0; i5 < parts5.length; i5++) {
-                        if (parts5[i5].trim()) out5.push(parts5[i5].trim());
-                    }
-                    inp.value = out5.join('\n\n');
-                }
-            } else if (op === 'apply') {
-                var n = parseInt(args.n) || 3;
-                if (typeof tgSplit === 'function' && typeof tgJoin === 'function') {
-                    var blocks6 = tgSplit(text);
-                    var out6 = [];
-                    for (var b6 = 0; b6 < blocks6.length; b6++) {
-                        var words = blocks6[b6].split(/\s+/).filter(function (w) { return w; });
-                        for (var i6 = 0; i6 < words.length; i6 += n) {
-                            out6.push(words.slice(i6, i6 + n).join(' '));
-                        }
-                    }
-                    inp.value = tgJoin(out6);
-                } else {
-                    var words2 = text.split(/\s+/).filter(function (w) { return w; });
-                    var out7 = [];
-                    for (var i7 = 0; i7 < words2.length; i7 += n) {
-                        out7.push(words2.slice(i7, i7 + n).join(' '));
-                    }
-                    inp.value = out7.join('\n\n');
-                }
-            } else if (op === 'low') {
-                if (typeof applyLow === 'function') {
-                    var oneLine = !!args.oneLine;
-                    var lower = !!args.lowercase;
-                    var nop = !!args.noPunct;
-                    var res = applyLow(text, {lowercase: lower, noPunct: nop, oneLine: oneLine});
-                    if (typeof tgJoin === 'function' && typeof tgSplit === 'function') {
-                        inp.value = tgJoin(tgSplit(res));
-                    } else {
-                        inp.value = res;
-                    }
-                }
-            }
-            return inp.value;
-        } finally {
-            inp.value = saved;
+        if (!inp) return Promise.resolve(text);
+        var ops;
+        if (op === 'chunk' || op === 'apply') {
+            var n = parseInt((args && args.n) || 3) || 3;
+            ops = ['chunk', String(n)];
+        } else {
+            ops = [op];
         }
+        return applyOpsRemote(text, ops, '\n\n').catch(function (e) {
+            console.warn('[bridge] ops/apply failed:', e);
+            return text;
+        });
     }
 
     // === приём команд от хаба ===
@@ -192,11 +111,12 @@
 
         // === batch: хаб просит обработать текст ===
         if (msg.type === 'batch-apply') {
-            var result = applyOp(msg.op, msg.args || {}, msg.text || '');
-            app.post({
-                type: 'batch-result',
-                reqId: msg.reqId,
-                text: result
+            applyOp(msg.op, msg.args || {}, msg.text || '').then(function (result) {
+                app.post({
+                    type: 'batch-result',
+                    reqId: msg.reqId,
+                    text: result
+                });
             });
         }
     });

@@ -12,7 +12,13 @@ import json
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import unquote, urlparse
 
-ROOT = os.path.dirname(os.path.abspath(__file__))
+import sys, os
+_HERE = os.path.dirname(os.path.abspath(__file__))
+_ROOT = os.path.dirname(_HERE)
+sys.path.insert(0, os.path.join(_ROOT, 'chatify'))
+from ops import apply_ops
+
+ROOT = _ROOT
 DATA_APPS = ("telegram", "discord", "subtitles")
 
 
@@ -25,7 +31,7 @@ import urllib.parse as _up
 import urllib.request as _urlreq
 
 _TG_ROOT   = Path(ROOT)
-_TG_DIR    = _TG_ROOT / "telegram"
+_TG_DIR    = _TG_ROOT / "apps" / "telegram"
 _TG_DATA   = _TG_ROOT / "data" / "telegram"
 _TG_MEDIA  = _TG_ROOT / "data" / "telegram" / "media" / "avatars"
 _TG_ROOTS  = _TG_ROOT / "data" / "telegram" / "allowed_roots.txt"
@@ -71,6 +77,65 @@ class Handler(SimpleHTTPRequestHandler):
     def __init__(self, *a, **kw):
         super().__init__(*a, directory=ROOT, **kw)
 
+    def _user_path(self):
+        return os.path.join(_ROOT, "data", "user.json")
+
+    def _user_default(self):
+        return {"name": "Alex", "emoji": "\U0001F642"}
+
+    def _handle_user_get(self):
+        p = self._user_path()
+        if not os.path.isfile(p):
+            return self._send_json(200, self._user_default())
+        try:
+            with open(p, "r", encoding="utf-8") as f:
+                obj = json.load(f)
+        except Exception:
+            obj = self._user_default()
+        if not isinstance(obj, dict):
+            obj = self._user_default()
+        obj.setdefault("name", "Alex")
+        obj.setdefault("emoji", "\U0001F642")
+        return self._send_json(200, obj)
+
+    def _handle_user_post(self):
+        length = int(self.headers.get("Content-Length", "0") or 0)
+        raw = self.rfile.read(length) if length else b""
+        try:
+            obj = json.loads(raw.decode("utf-8"))
+        except Exception as e:
+            return self._send_json(400, {"error": "bad json: %s" % e})
+        if not isinstance(obj, dict):
+            return self._send_json(400, {"error": "must be an object"})
+        name = str(obj.get("name", "Alex")).strip() or "Alex"
+        emoji = str(obj.get("emoji", "\U0001F642")).strip() or "\U0001F642"
+        out = {"name": name, "emoji": emoji}
+        p = self._user_path()
+        os.makedirs(os.path.dirname(p), exist_ok=True)
+        with open(p, "w", encoding="utf-8") as f:
+            json.dump(out, f, ensure_ascii=False)
+        return self._send_json(200, out)
+
+    def _handle_ops_apply(self):
+        length = int(self.headers.get("Content-Length", "0") or 0)
+        raw = self.rfile.read(length) if length else b""
+        try:
+            req = json.loads(raw.decode("utf-8"))
+        except Exception as e:
+            return self._send_json(400, {"error": "bad json: %s" % e})
+        text = req.get("text", "")
+        ops = req.get("ops", []) or []
+        sep = req.get("sep", "\\n---\\n")
+        try:
+            blocks = [b.strip() for b in text.split(sep) if b.strip()]
+            blocks = apply_ops(blocks, ops)
+            out = sep.join(blocks)
+        except SystemExit as e:
+            return self._send_json(400, {"error": str(e)})
+        except Exception as e:
+            return self._send_json(500, {"error": str(e)})
+        return self._send_json(200, {"text": out})
+
     def _send_json(self, code, obj):
         body = json.dumps(obj).encode("utf-8")
         self.send_response(code)
@@ -96,6 +161,8 @@ class Handler(SimpleHTTPRequestHandler):
         return _safe_join(data_dir, *rel.split("/"))
 
     def do_GET(self):
+        if self.path == "/user":
+            return self._handle_user_get()
         if self.path == "/data/ping":
             self._send_json(200, {"ok": True})
             return
@@ -126,6 +193,10 @@ class Handler(SimpleHTTPRequestHandler):
             self._send_json(500, {"error": str(e)})
 
     def do_POST(self):
+        if self.path == "/user":
+            return self._handle_user_post()
+        if self.path == "/ops/apply":
+            return self._handle_ops_apply()
         # __TGC_MERGE__ routes
         if self.path.startswith("/telegram/data"):
             return self._tg_handle_data_post(self.path)
@@ -446,7 +517,7 @@ def main():
     if not no_browser:
         threading.Timer(
             1.0,
-            lambda: webbrowser.open("http://127.0.0.1:%d/telegram/index.html" % port),
+            lambda: webbrowser.open("http://127.0.0.1:%d/apps/telegram/index.html" % port),
         ).start()
 
     def _stop(signum=None, frame=None):
