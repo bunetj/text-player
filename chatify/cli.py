@@ -15,6 +15,23 @@ SEP_CHOICES = {
 }
 
 
+def _extract_sep(ops, default_name):
+    """If ops contains ["sep", X], return (ops_without_sep, X).
+    Otherwise return (ops, default_name)."""
+    out = []
+    name = default_name
+    i = 0
+    while i < len(ops):
+        if ops[i].lower() == "sep" and i + 1 < len(ops):
+            name = ops[i+1].lower()
+            i += 2
+        else:
+            out.append(ops[i])
+            i += 1
+    return out, name
+
+
+
 def _split(text, sep):
     if sep is None:
         return [text]
@@ -49,6 +66,7 @@ def do_format(src, chat_ops, sep_name):
     if not chat_ops:
         print('format needs --chat "..."'); return
 
+    chat_ops, sep_name = _extract_sep(chat_ops, sep_name)
     sep_name = (sep_name or "none").lower()
     if sep_name not in SEP_CHOICES:
         print("unknown --sep: " + sep_name + "  (use blank | newline | none)"); return
@@ -102,23 +120,20 @@ def do_format(src, chat_ops, sep_name):
 def main():
     argv = sys.argv[1:]
     if argv and argv[0] in ("-h", "--help", "help"):
-        print("usage: python chatify/cli.py <path> --chat \"pdf low punct rem\" [--sep blank|newline|none]")
+        print("usage: python chatify/cli.py <path> --chat \"pdf low punct sep blank\"")
         print("")
         print("ops")
-        print("  pdf       reassemble PDF-wrapped lines")
-        print("  low       lowercase")
-        print("  punct     split on punctuation")
-        print("  rem       remove punctuation")
-        print("  lines     split on newlines")
-        print("  line      collapse to one line")
-        print("  sent      split on sentence endings")
-        print("  chunk N   split into blocks of N words")
-        print("  short     shorthand (en, ru)")
-        print("")
-        print("sep")
-        print("  none      whole file is one block (default)")
-        print("  blank     \\n\\n")
-        print("  newline   \\n")
+        print("  pdf         reassemble PDF-wrapped lines")
+        print("  low         lowercase")
+        print("  punct       split on punctuation")
+        print("  rem         remove punctuation")
+        print("  lines       split on newlines")
+        print("  line        collapse to one line")
+        print("  sent        split on sentence endings")
+        print("  chunk N     split into blocks of N words")
+        print("  short       shorthand (en, ru)")
+        print("  typo N      insert typos, N = drunkness 0..10")
+        print("  sep X       blank | newline | none (default none)")
         return
     if not argv:
         print("usage:")

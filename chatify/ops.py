@@ -3,8 +3,14 @@
 # The caller splits and joins.
 
 import os
+import random
 import re
 import unicodedata
+
+
+import sys as _sys
+_sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from typo import make_typos, preset  # noqa: E402
 
 
 # ---------- short ----------
@@ -37,6 +43,20 @@ def short_collisions():
 
 def op_short(blocks):
     return [_short_text(b) for b in blocks]
+
+
+def op_typo(blocks, args):
+    if not args:
+        raise SystemExit("typo needs a level 0..10")
+    try:
+        drunk = int(args[0])
+    except ValueError:
+        raise SystemExit("typo N: bad N")
+    if drunk not in range(11):
+        raise SystemExit("typo N: 0..10 only")
+    rng = random.Random(0)
+    opts = preset(drunk)
+    return [make_typos(b, rng, opts) for b in blocks]
 
 
 def op_pdf(blocks):
@@ -191,6 +211,9 @@ def apply_ops(blocks, ops):
         op = ops[i].lower()
         if op == "pdf":   blocks = op_pdf(blocks)
         elif op == "short": blocks = op_short(blocks)
+        elif op == "typo":
+            if i+1 >= len(ops): raise SystemExit("typo needs N")
+            blocks = op_typo(blocks, ops[i+1:i+2]); i += 1
         elif op == "low": blocks = op_low(blocks)
         elif op == "punct": blocks = op_punct(blocks)
         elif op == "rem": blocks = op_rem(blocks)
