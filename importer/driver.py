@@ -91,13 +91,26 @@ def do_import_files(app, files, chat_ops):
         print("unknown app: " + app); return
     if not files:
         print("no files given"); return
-    for full in files:
-        full = os.path.abspath(full)
-        if not os.path.isfile(full):
-            print("not found: " + full); continue
-        rel_dir = os.path.relpath(os.path.dirname(full), READINGS)
-        if rel_dir == ".":
-            rel_dir = ""
-        rel_dir = rel_dir.replace("\\", "/")
-        _import_one(app, full, rel_dir, chat_ops)
+    for path in files:
+        path = os.path.abspath(path)
+        if os.path.isdir(path):
+            for dirpath, _dirs, filenames in os.walk(path):
+                for n in sorted(filenames):
+                    if not n.lower().endswith(".txt"):
+                        continue
+                    full = os.path.join(dirpath, n)
+                    rel_dir = os.path.relpath(dirpath, READINGS)
+                    if rel_dir == ".":
+                        rel_dir = ""
+                    rel_dir = rel_dir.replace("\\", "/")
+                    _import_one(app, full, rel_dir, chat_ops)
+        elif os.path.isfile(path):
+            full = path
+            rel_dir = os.path.relpath(os.path.dirname(full), READINGS)
+            if rel_dir == ".":
+                rel_dir = ""
+            rel_dir = rel_dir.replace("\\", "/")
+            _import_one(app, full, rel_dir, chat_ops)
+        else:
+            print("not found: " + path)
     print("done.")
