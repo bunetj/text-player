@@ -1,3 +1,7 @@
+# Based on Bref-Shorthand-Converter by i0Z3R0
+# https://github.com/i0Z3R0/Bref-Shorthand-Converter
+# MIT License
+#
 # bref — latin shorthand.
 # dict lookup only. Loads en.csv next to this file.
 #

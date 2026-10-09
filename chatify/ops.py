@@ -8,19 +8,14 @@ import re
 import unicodedata
 
 
-import sys as _sys
-_sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from typo import make_typos, preset  # noqa: E402
+from chatify.typo import make_typos, preset
 
 
 # ---------- short ----------
 # Dispatches by script: skrpcht for Cyrillic, bref for Latin.
 # Each tool is its own module under chatify/short/.
 
-sys_path = os.path.dirname(os.path.abspath(__file__))
-if sys_path not in __import__("sys").path:
-    __import__("sys").path.insert(0, sys_path)
-from short import skrpcht, bref  # noqa: E402
+from chatify.short import skrpcht, bref
 
 SHORT_WORD_RE = re.compile(r"[А-Яа-яЁёA-Za-z0-9]+")
 

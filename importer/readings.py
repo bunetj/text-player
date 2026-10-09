@@ -21,7 +21,7 @@ READINGS  = os.path.join(_ROOT, "readings")
 sys.path.insert(0, os.path.join(_ROOT, "chatify"))
 from ops import apply_ops  # noqa: E402
 
-add_EXTS = (".txt", ".md", ".epub", ".pdf", ".docx")
+add_EXTS = (".txt", ".md", ".epub", ".pdf", ".docx", ".doc")
 
 SEP_CHOICES = {
     "newline": "\n",
@@ -106,9 +106,63 @@ def add_docx(path):
     return "\n\n".join(out)
 
 
+def _antiword_env(here):
+    env = os.environ.copy()
+    # try a few likely spots for the mapping files
+    for cand in (
+        os.path.join(here, "antiword"),
+        os.path.join(here, "antiword_data"),
+        os.path.join(here, "share", "antiword"),
+        os.path.join(here),
+    ):
+        if os.path.isdir(cand) and any(
+            f.endswith(".txt") for f in os.listdir(cand)
+        ):
+            env["ANTIWORDHOME"] = cand
+            return env
+    env["ANTIWORDHOME"] = here
+    return env
+
+
+def add_doc(path):
+    here = os.path.dirname(os.path.abspath(__file__))
+    for name in ("antiword.exe", "antiword", "catdoc.exe", "catdoc"):
+        local = os.path.join(here, name)
+        if os.path.isfile(local):
+            env = _antiword_env(here) if name.startswith("antiword") else None
+            if name.startswith("antiword"):
+                # try UTF-8 mapping first; antiword's default is latin-1
+                for m in ("utf-8.txt", "cp1251.txt", "koi8-r.txt"):
+                    r = subprocess.run(
+                        [local, "-m", m, path],
+                        stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env,
+                    )
+                    if r.returncode == 0:
+                        txt = r.stdout.decode("utf-8", "replace")
+                        if "\ufffd" not in txt:
+                            return txt
+                # fallback: latin-1 default
+                r = subprocess.run([local, path], stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
+                if r.returncode == 0:
+                    return r.stdout.decode("utf-8", "replace")
+            r = subprocess.run([local, path], stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
+            if r.returncode == 0:
+                return r.stdout.decode("utf-8", "replace")
+            raise RuntimeError(name + " failed: " + r.stderr.decode("utf-8", "replace")[:300])
+
+    for name in ("antiword", "catdoc"):
+        exe = shutil.which(name)
+        if exe:
+            r = subprocess.run([exe, path], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            if r.returncode == 0:
+                return r.stdout.decode("utf-8", "replace")
+
+    raise RuntimeError(".doc needs antiword or catdoc (drop the .exe next to readings.py)")
+
 adderS = {
     ".txt": add_txt, ".md": add_txt,
     ".epub": add_epub, ".pdf": add_pdf, ".docx": add_docx,
+    ".doc": add_doc,
 }
 
 
@@ -410,6 +464,32 @@ def do_format(src, chat_ops, sep_name):
         print("failed: %d" % n_fail)
 
 
+def _run(target, recursive, chat_ops, sep_name):
+    """Add if not a .txt, then optionally chatify."""
+    target = os.path.abspath(target)
+    if not os.path.exists(target):
+        print("not found: " + target); return
+
+    if os.path.isdir(target):
+        do_add(target, recursive)
+        if chat_ops:
+            do_format(target, chat_ops, sep_name)
+        return
+
+    ext = os.path.splitext(target)[1].lower()
+    if ext in (".txt", ".md"):
+        src = target
+    else:
+        do_add(target, False)
+        stem = safe_stem(os.path.splitext(os.path.basename(target))[0])
+        src = os.path.join(READINGS, stem + ".txt")
+        if not os.path.isfile(src):
+            print("extracted file not found in readings/"); return
+
+    if chat_ops:
+        do_format(src, chat_ops, sep_name)
+
+
 # ---------- main ----------
 
 def main():
@@ -422,8 +502,12 @@ def main():
         print('  python importer/readings.py url            (paste URLs, blank line to finish)')
         return
 
-    verb = argv[0]
-    argv = argv[1:]
+    VERBS = ("links", "url", "add", "format")
+    if argv and argv[0] in VERBS:
+        verb = argv[0]
+        argv = argv[1:]
+    else:
+        verb = "path"
 
     socks5 = None
     chat_ops = []

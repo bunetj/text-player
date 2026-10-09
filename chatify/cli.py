@@ -6,7 +6,7 @@ import os
 import shutil
 import sys
 
-from ops import apply_ops
+from chatify.ops import apply_ops
 
 SEP_CHOICES = {
     "blank":   "\n\n",
